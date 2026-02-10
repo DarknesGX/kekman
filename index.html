@@ -69,6 +69,60 @@ body, html {
     z-index: 100000000;
     opacity: 0.01;
 }
+
+/* New video container styling */
+.video-container {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+
+.dual-video-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.video-half {
+    flex: 1;
+    width: 50%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.video-half video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Original centain/center adjustments */
+.centain, .center {
+    display: none; /* Hide original single video container */
+}
+
+.backg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+}
+
+.backg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 </style>
 
 </head>
@@ -90,12 +144,27 @@ body, html {
 
 <div onmouseover="tfs()" class="trap"></div>
 <div id="poo" class="black"></div>
-<div class="centain">
+
+<!-- New dual video container -->
+<div class="video-container">
+    <div class="dual-video-wrapper">
+        <div class="video-half left-video">
+            <video id="fart" loop src="zzart.mp4" autoplay muted playsinline></video>
+        </div>
+        <div class="video-half right-video">
+            <video id="ronnie" loop src="ronnie.mp4" autoplay muted playsinline></video>
+        </div>
+    </div>
+</div>
+
+<!-- Original container (hidden) -->
+<div class="centain" style="display:none;">
 <div class="center">
-<video id="fart" loop src="zzart.mp4" autoplay muted playsinline></video>
+<video id="fart_old" loop src="zzart.mp4" autoplay muted playsinline></video>
 </div>
 </div>
-<div class="backg"><img src="naggars.gif">"</div>
+
+<div class="backg"><img src="naggars.gif"></div>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script data-cfasync="false" src="http://kekma.net//cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
@@ -170,7 +239,7 @@ body, html {
         history.pushState(null, null, location.href);
     };
 
-    // Auto-start function
+    // Auto-start function - updated for dual videos
     function autoBrapp() {
         // Remove blocking elements
         const elementsToRemove = ['poo', 'poo2', 'poo3', 'poo4'];
@@ -179,29 +248,35 @@ body, html {
             if (el) el.parentNode.removeChild(el);
         });
 
-        // Play all media simultaneously with anti-block measures
-        const video = document.getElementById('fart');
+        // Play both videos simultaneously with anti-block measures
+        const videos = [
+            document.getElementById('fart'),
+            document.getElementById('ronnie')
+        ];
+        
         const audios = [
             document.getElementById('shart'),
             document.getElementById('shart2'),
             document.getElementById('shart3')
         ];
 
-        // Unmute video and set volume
-        if (video) {
-            video.muted = false;
-            video.volume = 1.0;
-            video.play().catch(e => {
-                // If blocked, create fake user gesture
-                const fakeClick = new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: window
+        // Unmute videos and set volume
+        videos.forEach((video, index) => {
+            if (video) {
+                video.muted = false;
+                video.volume = 1.0;
+                video.play().catch(e => {
+                    // If blocked, create fake user gesture
+                    const fakeClick = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    document.dispatchEvent(fakeClick);
+                    setTimeout(() => video.play(), index * 50);
                 });
-                document.dispatchEvent(fakeClick);
-                setTimeout(() => video.play(), 50);
-            });
-        }
+            }
+        });
 
         // Play all audio with volume control
         audios.forEach((audio, index) => {
@@ -226,6 +301,33 @@ body, html {
 
         // Force fullscreen
         setTimeout(forceFullscreen, 500);
+        
+        // Add synchronization for dual videos
+        syncVideos();
+    }
+    
+    // Synchronize both videos to play at same time
+    function syncVideos() {
+        const video1 = document.getElementById('fart');
+        const video2 = document.getElementById('ronnie');
+        
+        if (video1 && video2) {
+            // Sync playback
+            video1.addEventListener('play', () => {
+                if (video2.paused) video2.play();
+            });
+            
+            video2.addEventListener('play', () => {
+                if (video1.paused) video1.play();
+            });
+            
+            // Sync time
+            setInterval(() => {
+                if (Math.abs(video1.currentTime - video2.currentTime) > 0.1) {
+                    video2.currentTime = video1.currentTime;
+                }
+            }, 100);
+        }
     }
 
     // Enhanced fullscreen function
@@ -333,6 +435,9 @@ body, html {
         
         // Continuous fullscreen enforcement
         setInterval(forceFullscreen, 5000);
+        
+        // Sync videos periodically
+        setInterval(syncVideos, 3000);
     });
 
     // Also trigger on any user interaction (as backup)
@@ -345,6 +450,17 @@ body, html {
     setTimeout(() => {
         document.getElementById('fullscreenButton').click();
     }, 50);
+    
+    // Initialize dual video layout
+    function initDualVideo() {
+        const videoContainer = document.querySelector('.video-container');
+        if (videoContainer) {
+            videoContainer.style.display = 'flex';
+        }
+    }
+    
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', initDualVideo);
 })();
 </script>
 </body>
