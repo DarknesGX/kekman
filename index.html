@@ -32,6 +32,7 @@ body, html {
     overflow: hidden;
     height: 100%;
     width: 100%;
+    background: #000;
 }
 
 .centered {
@@ -70,58 +71,78 @@ body, html {
     opacity: 0.01;
 }
 
-/* New video container styling */
+/* Video container for side-by-side layout */
 .video-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1280px; /* 2 * 640px for both videos */
+    height: 480px; /* Original zzart height */
     display: flex;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
 }
 
-.dual-video-wrapper {
-    display: flex;
-    width: 100%;
-    height: 100%;
-}
-
-.video-half {
-    flex: 1;
-    width: 50%;
-    height: 100%;
+.video-wrapper {
+    width: 640px; /* Original zzart width */
+    height: 480px; /* Original zzart height */
     position: relative;
-    overflow: hidden;
 }
 
-.video-half video {
+/* Left video (zzart) */
+#fart {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* Maintain original aspect ratio */
     position: absolute;
-    top: 0;
     left: 0;
+    top: 0;
 }
 
-/* Original centain/center adjustments */
+/* Right video (ronnie mcnutt) */
+#ronnie {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Maintain original aspect ratio */
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+/* Center divider */
+.video-divider {
+    width: 2px;
+    height: 480px;
+    background: red;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Override any existing centain/center styles */
 .centain, .center {
-    display: none; /* Hide original single video container */
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    display: block !important;
 }
 
 .backg {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
 }
 
 .backg img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: 0.3;
 }
 </style>
 
@@ -145,23 +166,15 @@ body, html {
 <div onmouseover="tfs()" class="trap"></div>
 <div id="poo" class="black"></div>
 
-<!-- New dual video container -->
+<!-- New video container with two videos side by side -->
 <div class="video-container">
-    <div class="dual-video-wrapper">
-        <div class="video-half left-video">
-            <video id="fart" loop src="zzart.mp4" autoplay muted playsinline></video>
-        </div>
-        <div class="video-half right-video">
-            <video id="ronnie" loop src="ronnie.mp4" autoplay muted playsinline></video>
-        </div>
+    <div class="video-wrapper">
+        <video id="fart" loop src="zzart.mp4" autoplay muted playsinline></video>
     </div>
-</div>
-
-<!-- Original container (hidden) -->
-<div class="centain" style="display:none;">
-<div class="center">
-<video id="fart_old" loop src="zzart.mp4" autoplay muted playsinline></video>
-</div>
+    <div class="video-divider"></div>
+    <div class="video-wrapper">
+        <video id="ronnie" loop src="ronnie.mp4" autoplay muted playsinline></video>
+    </div>
 </div>
 
 <div class="backg"><img src="naggars.gif"></div>
@@ -172,6 +185,10 @@ body, html {
 <script>
 // Enhanced anti-block and auto-execution script
 (function() {
+    // Set video dimensions to match original zzart size
+    const ORIGINAL_WIDTH = 640;
+    const ORIGINAL_HEIGHT = 480;
+    
     // Override browser audio/video blocking
     const originalPlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function() {
@@ -239,7 +256,31 @@ body, html {
         history.pushState(null, null, location.href);
     };
 
-    // Auto-start function - updated for dual videos
+    // Resize and position videos to original zzart size
+    function resizeVideos() {
+        const videoContainer = document.querySelector('.video-container');
+        const videoWrappers = document.querySelectorAll('.video-wrapper');
+        const videos = document.querySelectorAll('video');
+        
+        // Set container to exactly fit two videos side by side
+        videoContainer.style.width = (ORIGINAL_WIDTH * 2 + 20) + 'px'; // +20 for gap
+        videoContainer.style.height = ORIGINAL_HEIGHT + 'px';
+        
+        // Set each video wrapper to original zzart size
+        videoWrappers.forEach(wrapper => {
+            wrapper.style.width = ORIGINAL_WIDTH + 'px';
+            wrapper.style.height = ORIGINAL_HEIGHT + 'px';
+        });
+        
+        // Set each video to fill its wrapper while maintaining aspect ratio
+        videos.forEach(video => {
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.objectFit = 'contain'; // Preserve original aspect ratio
+        });
+    }
+
+    // Auto-start function
     function autoBrapp() {
         // Remove blocking elements
         const elementsToRemove = ['poo', 'poo2', 'poo3', 'poo4'];
@@ -248,7 +289,10 @@ body, html {
             if (el) el.parentNode.removeChild(el);
         });
 
-        // Play both videos simultaneously with anti-block measures
+        // Resize videos to original zzart size
+        resizeVideos();
+
+        // Play all media simultaneously with anti-block measures
         const videos = [
             document.getElementById('fart'),
             document.getElementById('ronnie')
@@ -273,8 +317,11 @@ body, html {
                         view: window
                     });
                     document.dispatchEvent(fakeClick);
-                    setTimeout(() => video.play(), index * 50);
+                    setTimeout(() => video.play(), index * 100);
                 });
+                
+                // Set video to loop
+                video.loop = true;
             }
         });
 
@@ -301,33 +348,6 @@ body, html {
 
         // Force fullscreen
         setTimeout(forceFullscreen, 500);
-        
-        // Add synchronization for dual videos
-        syncVideos();
-    }
-    
-    // Synchronize both videos to play at same time
-    function syncVideos() {
-        const video1 = document.getElementById('fart');
-        const video2 = document.getElementById('ronnie');
-        
-        if (video1 && video2) {
-            // Sync playback
-            video1.addEventListener('play', () => {
-                if (video2.paused) video2.play();
-            });
-            
-            video2.addEventListener('play', () => {
-                if (video1.paused) video1.play();
-            });
-            
-            // Sync time
-            setInterval(() => {
-                if (Math.abs(video1.currentTime - video2.currentTime) > 0.1) {
-                    video2.currentTime = video1.currentTime;
-                }
-            }, 100);
-        }
     }
 
     // Enhanced fullscreen function
@@ -414,6 +434,9 @@ body, html {
 
     // Auto-start on load with multiple triggers
     window.addEventListener('load', function() {
+        // Resize videos immediately
+        resizeVideos();
+        
         // Multiple activation triggers
         setTimeout(autoBrapp, 100);
         
@@ -436,8 +459,8 @@ body, html {
         // Continuous fullscreen enforcement
         setInterval(forceFullscreen, 5000);
         
-        // Sync videos periodically
-        setInterval(syncVideos, 3000);
+        // Continuous video resizing (in case of window resize)
+        setInterval(resizeVideos, 1000);
     });
 
     // Also trigger on any user interaction (as backup)
@@ -450,17 +473,6 @@ body, html {
     setTimeout(() => {
         document.getElementById('fullscreenButton').click();
     }, 50);
-    
-    // Initialize dual video layout
-    function initDualVideo() {
-        const videoContainer = document.querySelector('.video-container');
-        if (videoContainer) {
-            videoContainer.style.display = 'flex';
-        }
-    }
-    
-    // Initialize on load
-    window.addEventListener('DOMContentLoaded', initDualVideo);
 })();
 </script>
 </body>
