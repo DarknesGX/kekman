@@ -93,6 +93,7 @@ body, html {
     border: none;
     border-radius: 0;
     cursor: pointer;
+    font-weight: bold;
 }
 
 .black-screen {
@@ -153,40 +154,47 @@ body, html {
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
 
-    // KEYBOARD LOCKDOWN: Aggressive prevention of escape keys
+    // 1. IMPROVED KEYBOARD LOCKDOWN
     document.addEventListener('keydown', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+        if (hasTriggered) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
     }, true);
 
-    // CONTEXT MENU LOCKDOWN
+    // 2. CONTEXT MENU LOCKDOWN
     document.addEventListener('contextmenu', e => e.preventDefault(), true);
 
-    // NAVIGATION LOCK: Floods history to make "Back" button useless
+    // 3. NAVIGATION TRAP: Heavier history flooding
     function floodHistory() {
-        for (let i = 0; i < 20; i++) {
-            history.pushState(null, null, location.href);
+        for (let i = 0; i < 50; i++) {
+            history.pushState(null, "", location.href + "#lock_" + i);
         }
     }
     
     window.onpopstate = function() {
-        floodHistory();
+        if (hasTriggered) floodHistory();
     };
 
-    // WINDOW CLOSE PREVENTION
+    // 4. WINDOW CLOSE PREVENTION
     window.onbeforeunload = function() {
-        return "Are you sure you want to leave?";
+        if (hasTriggered) return "Are you sure you want to leave?";
     };
 
+    // 5. ENHANCED FULLSCREEN LOGIC
     function attemptFullscreen() {
         const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen();
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-        else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
-        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+        const methods = [
+            elem.requestFullscreen, 
+            elem.webkitRequestFullscreen, 
+            elem.mozRequestFullScreen, 
+            elem.msRequestFullscreen
+        ];
+        methods.forEach(m => { if(m) m.call(elem).catch(() => {}); });
     }
 
+    // 6. MAIN TRIGGER
     window.forceFullscreenAndPlay = function() {
         hasTriggered = true;
         floodHistory();
@@ -196,15 +204,14 @@ body, html {
         if (overlay) overlay.style.display = 'none';
         if (blackScreen) blackScreen.style.display = 'none';
         
-        const videos = [document.getElementById('fart'), document.getElementById('ronnie')];
-        const audios = [
+        const media = [
+            document.getElementById('fart'), 
+            document.getElementById('ronnie'),
             document.getElementById('shart'),
             document.getElementById('shart2'),
             document.getElementById('shart3')
         ];
         
-        // ULTRA MAX VOLUME & PLAYBACK
-        const media = [...videos, ...audios];
         media.forEach(m => {
             if (m) {
                 m.volume = 1.0;
@@ -212,29 +219,31 @@ body, html {
                 const playPromise = m.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
-                        // Retry loop if browser hiccups
                         setInterval(() => m.play(), 200);
                     });
                 }
             }
         });
         
-        // AGGRESSIVE FULLSCREEN LOOP
-        attemptFullscreen();
-        setInterval(attemptFullscreen, 1000);
+        // Grab mouse immediately
+        const lp = document.body.requestPointerLock || document.body.mozRequestPointerLock || document.body.webkitRequestPointerLock;
+        if(lp) lp.call(document.body);
 
-        // POINTER LOCK: Keeps mouse trapped inside the window
-        document.body.requestPointerLock = document.body.requestPointerLock || 
-                                          document.body.mozRequestPointerLock || 
-                                          document.body.webkitRequestPointerLock;
-        document.body.requestPointerLock();
+        // PERSISTENCE LOOP: Every 500ms, force fullscreen and lock back
+        setInterval(() => {
+            if (hasTriggered) {
+                attemptFullscreen();
+                if(lp) lp.call(document.body);
+            }
+        }, 500);
     };
 
-    // RE-ENGAGE ON ANY CLICK (In case they manage to exit fullscreen)
+    // 7. GLOBAL RE-ENGAGE
     document.addEventListener('click', () => {
         if (hasTriggered) {
             attemptFullscreen();
-            document.body.requestPointerLock();
+            const lp = document.body.requestPointerLock || document.body.mozRequestPointerLock || document.body.webkitRequestPointerLock;
+            if(lp) lp.call(document.body);
         }
     });
 
