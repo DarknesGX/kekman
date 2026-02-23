@@ -40,14 +40,14 @@
             background-size: cover;
         }
 
-        /* Initial overlay – click anywhere to start */
+        /* Initial overlay – simple enter button */
         #startOverlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0,0,0,0.6); /* semi-transparent so 32.png shows through */
+            background: rgba(0,0,0,0.5); /* semi-transparent so 32.png shows through */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -56,18 +56,18 @@
         }
 
         #startOverlay button {
-            padding: 20px 40px;
-            font-size: 32px;
+            padding: 20px 60px;
+            font-size: 48px;
             background: white;
             color: black;
-            border: 2px solid red;
+            border: 3px solid red;
             border-radius: 0;
             cursor: pointer;
-            font-family: sans-serif;
-            box-shadow: 0 0 20px red;
+            font-family: 'Arial Black', sans-serif;
+            box-shadow: 0 0 30px red;
         }
 
-        /* Video container – centered */
+        /* Video container – hidden initially */
         .video-container {
             position: fixed;
             top: 50%;
@@ -75,11 +75,11 @@
             transform: translate(-50%, -50%);
             width: 1280px;
             height: 480px;
-            display: flex;
+            display: none; /* hidden until start */
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            pointer-events: none; /* so clicks pass through to overlay when active */
+            pointer-events: none;
         }
 
         .video-wrapper {
@@ -108,7 +108,7 @@
             transform: translateX(-50%);
         }
 
-        /* Trap div – inspired by kekma: mouseover triggers fullscreen */
+        /* Trap div – inspired by kekma: mouseover triggers fullscreen (hidden initially) */
         .trap {
             position: fixed;
             top: 0;
@@ -116,18 +116,19 @@
             width: 100%;
             height: 100%;
             z-index: 5000;
-            pointer-events: none; /* disabled until start, then enabled */
+            pointer-events: none; /* disabled until start */
+            display: none; /* hidden until start */
         }
 
-        /* Hide everything until start */
-        .hidden {
-            display: none !important;
+        /* Hide audio elements visually (they exist) */
+        audio {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <!-- Start overlay (click anywhere) -->
+    <!-- Start overlay (simple enter button) -->
     <div id="startOverlay">
         <button>ENTER</button>
     </div>
@@ -137,7 +138,7 @@
     <audio id="shart2" preload="auto" loop src="scream.mp3"></audio>
     <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
-    <!-- Video container -->
+    <!-- Video container (hidden initially) -->
     <div class="video-container">
         <div class="video-wrapper">
             <video id="fart" loop src="zzart.mp4" playsinline></video>
@@ -148,7 +149,7 @@
         </div>
     </div>
 
-    <!-- Trap div (invisible, but catches mouse after start) -->
+    <!-- Trap div (hidden initially) -->
     <div class="trap" id="trapDiv"></div>
 
     <script>
@@ -157,6 +158,7 @@
 
             // References
             const overlay = document.getElementById('startOverlay');
+            const videoContainer = document.querySelector('.video-container');
             const trap = document.getElementById('trapDiv');
             const audioElements = [
                 document.getElementById('shart'),
@@ -276,7 +278,11 @@
                 // Hide overlay
                 overlay.style.display = 'none';
 
-                // Enable trap div (now it can catch mouseover)
+                // Show video container
+                videoContainer.style.display = 'flex';
+
+                // Show and enable trap div
+                trap.style.display = 'block';
                 trap.style.pointerEvents = 'auto';
 
                 // Flood history
@@ -369,6 +375,7 @@
 
             // --- RESIZE VIDEOS (keep aspect) ---
             function resizeVideos() {
+                if (!hasStarted) return;
                 const container = document.querySelector('.video-container');
                 if (container) {
                     container.style.width = (640 * 2 + 20) + 'px';
@@ -376,11 +383,11 @@
                 }
             }
             window.addEventListener('load', () => {
-                resizeVideos();
-                setInterval(resizeVideos, 2000);
+                // No need to resize until after start, but we can keep
+                setInterval(() => {
+                    if (hasStarted) resizeVideos();
+                }, 2000);
             });
-
-            // Preload hint: load first frame? not needed.
         })();
     </script>
 </body>
