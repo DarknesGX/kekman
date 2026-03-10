@@ -42,15 +42,16 @@ body, html {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between;  /* Keeps original spacing */
     z-index: 1000;
+    /* No fixed width – it will automatically fit the content */
 }
 
 .video-wrapper {
     width: 640px;
     height: 480px;
     position: relative;
-    flex-shrink: 0;
+    flex-shrink: 0;  /* Prevents videos from shrinking */
 }
 
 #wads, #fart, #ronnie {
@@ -65,7 +66,7 @@ body, html {
     width: 2px;
     height: 480px;
     background: red;
-    flex-shrink: 0;
+    flex-shrink: 0;  /* Divider also shouldn't shrink */
 }
 
 .click-overlay {
@@ -131,7 +132,7 @@ body, html {
 <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
 <div class="video-container">
-    <!-- New third video (wads.gif) placed above the existing two -->
+    <!-- New third video (wads.gif) placed first -->
     <div class="video-wrapper">
         <video id="wads" loop src="wads.gif" playsinline></video>
     </div>
@@ -179,8 +180,7 @@ body, html {
         });
 
         // Connect video elements if they have audio tracks
-        // Added 'wads' to include the new video
-        const videoIds = ['fart', 'ronnie', 'wads'];
+        const videoIds = ['fart', 'ronnie', 'wads'];  // Added 'wads'
         videoIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -333,21 +333,7 @@ body, html {
         }
     };
 
-    // --- Resize logic (updated for three videos) ---
-    function resizeVideos() {
-        const videoContainer = document.querySelector('.video-container');
-        if (videoContainer) {
-            // Set width to accommodate three videos (640px each) plus 20px extra (original pattern)
-            videoContainer.style.width = (ORIGINAL_WIDTH * 3 + 20) + 'px';
-            videoContainer.style.height = ORIGINAL_HEIGHT + 'px';
-        }
-    }
-
-    window.addEventListener('load', () => {
-        resizeVideos();
-        setInterval(resizeVideos, 2000);
-    });
-
+    // No resize function needed – layout is automatic
 })();
 </script>
 </body>
