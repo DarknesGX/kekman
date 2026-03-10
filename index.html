@@ -39,22 +39,21 @@ body, html {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 1280px;
+    height: 480px;
     display: flex;
-    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    justify-content: space-between;  /* Keeps original spacing */
     z-index: 1000;
-    /* No fixed width – it will automatically fit the content */
 }
 
 .video-wrapper {
     width: 640px;
     height: 480px;
     position: relative;
-    flex-shrink: 0;  /* Prevents videos from shrinking */
 }
 
-#wads, #fart, #ronnie {
+#fart, #ronnie {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -62,11 +61,16 @@ body, html {
     top: 0;
 }
 
+#fart { left: 0; }
+#ronnie { right: 0; }
+
 .video-divider {
     width: 2px;
     height: 480px;
     background: red;
-    flex-shrink: 0;  /* Divider also shouldn't shrink */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .click-overlay {
@@ -132,11 +136,6 @@ body, html {
 <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
 <div class="video-container">
-    <!-- New third video (wads.gif) placed first -->
-    <div class="video-wrapper">
-        <video id="wads" loop src="wads.gif" playsinline></video>
-    </div>
-    <div class="video-divider"></div>
     <div class="video-wrapper">
         <video id="fart" loop src="zzart.mp4" playsinline></video>
     </div>
@@ -180,7 +179,7 @@ body, html {
         });
 
         // Connect video elements if they have audio tracks
-        const videoIds = ['fart', 'ronnie', 'wads'];  // Added 'wads'
+        const videoIds = ['fart', 'ronnie'];
         videoIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -333,7 +332,20 @@ body, html {
         }
     };
 
-    // No resize function needed – layout is automatic
+    // --- Resize logic (unchanged) ---
+    function resizeVideos() {
+        const videoContainer = document.querySelector('.video-container');
+        if (videoContainer) {
+            videoContainer.style.width = (ORIGINAL_WIDTH * 2 + 20) + 'px';
+            videoContainer.style.height = ORIGINAL_HEIGHT + 'px';
+        }
+    }
+
+    window.addEventListener('load', () => {
+        resizeVideos();
+        setInterval(resizeVideos, 2000);
+    });
+
 })();
 </script>
 </body>
